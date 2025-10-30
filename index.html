@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="description" content="Atrapa las Almas - Un juego 3D del Día de los Muertos" />
+  <title>Atrapa las Almas</title>
+  <link rel="stylesheet" href="/src/styles/main.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Game Canvas Container -->
+    <div id="game-container">
+      <canvas id="game-canvas"></canvas>
+    </div>
+    
+    <!-- UI Overlay -->
+    <div id="ui-overlay">
+      <!-- Timer Display -->
+      <div id="timer-display" class="ui-element timer">
+        <span id="timer-value">60</span>
+      </div>
+      
+      <!-- Score Display -->
+      <div id="score-display" class="ui-element score">
+        Almas: <span id="score-value">0</span>
+      </div>
+      
+      <!-- Mobile Touch Controls -->
+      <div id="touch-controls" class="mobile-only">
+        <div id="virtual-joystick"></div>
+      </div>
+    </div>
+    
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="modal hidden">
+      <div class="modal-content">
+        <h2>¡Juego Terminado!</h2>
+        <p id="final-message">Las almas agradecen tu guía</p>
+        <p>Almas recolectadas: <span id="final-score">0</span></p>
+        <button id="restart-button" class="btn-primary">Jugar de Nuevo</button>
+      </div>
+    </div>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+      <div class="loading-content">
+        <h1>Atrapa las Almas</h1>
+        <div class="loading-spinner"></div>
+        <p>Cargando...</p>
+      </div>
+    </div>
+  </div>
+  
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
