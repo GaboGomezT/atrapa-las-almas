@@ -71,14 +71,14 @@
     - Test soul animation and cleanup
     - _Requirements: 2.1, 2.3, 2.5_
 
-- [ ] 5. Implement game logic and state management
-  - [ ] 5.1 Create GameEngine class with core game loop
+- [x] 5. Implement game logic and state management
+  - [x] 5.1 Create GameEngine class with core game loop
     - Implement game state management (menu, playing, game-over)
     - Create main update loop with delta time calculation
     - Add game initialization and cleanup methods
     - _Requirements: 3.4, 5.4_
 
-  - [ ] 5.2 Implement timer and scoring system
+  - [x] 5.2 Implement timer and scoring system
     - Create 60-second countdown timer with real-time updates
     - Implement score tracking for collected souls
     - Add game over trigger when timer reaches zero
