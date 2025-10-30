@@ -27,14 +27,14 @@
     - Test responsive canvas resizing
     - _Requirements: 4.3, 6.4_
 
-- [ ] 3. Implement player skull character and movement system
-  - [ ] 3.1 Create PlayerController class with skull model
+- [x] 3. Implement player skull character and movement system
+  - [x] 3.1 Create PlayerController class with skull model
     - Load or create skull 3D geometry with luminous material
     - Implement position tracking and movement constraints
     - Add smooth movement animation with interpolation
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-  - [ ] 3.2 Implement input handling for keyboard and touch
+  - [x] 3.2 Implement input handling for keyboard and touch
     - Create input system for WASD and arrow key detection
     - Add touch controls with virtual joystick for mobile
     - Implement cross-platform input normalization
@@ -46,20 +46,20 @@
     - Test touch control responsiveness
     - _Requirements: 1.1, 1.3, 1.5_
 
-- [ ] 4. Create soul entities and collection system
-  - [ ] 4.1 Implement Soul class with floating animation
+- [x] 4. Create soul entities and collection system
+  - [x] 4.1 Implement Soul class with floating animation
     - Create translucent sphere geometry with glowing material
     - Add particle effects for blue/violet glow
     - Implement slow floating movement patterns
     - _Requirements: 2.3, 2.4_
 
-  - [ ] 4.2 Build SoulManager for spawning and lifecycle
+  - [x] 4.2 Build SoulManager for spawning and lifecycle
     - Create soul spawning system with random positioning
     - Implement soul entity pool for performance optimization
     - Add soul removal and cleanup functionality
     - _Requirements: 2.3, 2.4_
 
-  - [ ] 4.3 Implement collision detection between skull and souls
+  - [x] 4.3 Implement collision detection between skull and souls
     - Create collision detection using distance calculation
     - Add soul collection animation with light effects
     - Trigger soul removal and score increment on collision
