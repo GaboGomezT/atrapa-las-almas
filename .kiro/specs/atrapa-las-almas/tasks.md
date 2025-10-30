@@ -7,14 +7,14 @@
   - Create directory structure for assets, components, and styles
   - _Requirements: 6.2, 6.4_
 
-- [ ] 2. Implement core Three.js rendering foundation
-  - [ ] 2.1 Create RenderEngine class with scene initialization
+- [x] 2. Implement core Three.js rendering foundation
+  - [x] 2.1 Create RenderEngine class with scene initialization
     - Initialize Three.js scene, camera, and WebGL renderer
     - Set up responsive canvas sizing and device pixel ratio handling
     - Implement basic render loop with requestAnimationFrame
     - _Requirements: 4.3, 6.1, 6.4_
 
-  - [ ] 2.2 Build Day of the Dead environment and lighting
+  - [x] 2.2 Build Day of the Dead environment and lighting
     - Create ground plane with marigold petal texture
     - Add ambient lighting with warm orange tones
     - Implement central altar 3D model or basic geometry
