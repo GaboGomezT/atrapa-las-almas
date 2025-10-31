@@ -32,6 +32,34 @@
       </div>
     </div>
     
+    <!-- Name Input Modal -->
+    <div id="name-input-modal" class="modal hidden">
+      <div class="modal-content">
+        <h2>¡Excelente puntuación!</h2>
+        <p>Almas recolectadas: <span id="name-input-score">0</span></p>
+        <p>Ingresa tu nombre para el ranking:</p>
+        <div class="name-input-container">
+          <input 
+            type="text" 
+            id="player-name-input" 
+            class="name-input" 
+            placeholder="Tu nombre" 
+            maxlength="20"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="words"
+          />
+          <div id="name-validation-error" class="validation-error hidden">
+            El nombre debe tener entre 1 y 20 caracteres (solo letras, números y espacios)
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button id="submit-name-button" class="btn-primary">Enviar</button>
+          <button id="cancel-name-button" class="btn-secondary">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Game Over Modal -->
     <div id="game-over-modal" class="modal hidden">
       <div class="modal-content">

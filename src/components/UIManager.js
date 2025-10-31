@@ -10,6 +10,14 @@ export class UIManager {
     this.finalScoreElement = null
     this.restartButton = null
     
+    // Name input modal elements
+    this.nameInputModal = null
+    this.nameInputScoreElement = null
+    this.playerNameInput = null
+    this.submitNameButton = null
+    this.cancelNameButton = null
+    this.nameValidationError = null
+    
     // Game state tracking
     this.currentScore = 0
     this.timeRemaining = 60
@@ -17,6 +25,8 @@ export class UIManager {
     
     // Callbacks
     this.onRestartCallback = null
+    this.onNameSubmitCallback = null
+    this.onNameCancelCallback = null
   }
 
   /**
@@ -45,9 +55,43 @@ export class UIManager {
         throw new Error('Game over modal elements not found')
       }
 
+      // Get name input modal elements
+      this.nameInputModal = document.getElementById('name-input-modal')
+      this.nameInputScoreElement = document.getElementById('name-input-score')
+      this.playerNameInput = document.getElementById('player-name-input')
+      this.submitNameButton = document.getElementById('submit-name-button')
+      this.cancelNameButton = document.getElementById('cancel-name-button')
+      this.nameValidationError = document.getElementById('name-validation-error')
+
+      if (!this.nameInputModal || !this.nameInputScoreElement || !this.playerNameInput || 
+          !this.submitNameButton || !this.cancelNameButton || !this.nameValidationError) {
+        throw new Error('Name input modal elements not found')
+      }
+
       // Set up restart button event listener
       this.restartButton.addEventListener('click', () => {
         this.handleRestart()
+      })
+
+      // Set up name input modal event listeners
+      this.submitNameButton.addEventListener('click', () => {
+        this.handleNameSubmit()
+      })
+
+      this.cancelNameButton.addEventListener('click', () => {
+        this.handleNameCancel()
+      })
+
+      // Real-time validation for name input
+      this.playerNameInput.addEventListener('input', () => {
+        this.validatePlayerNameInput()
+      })
+
+      // Handle Enter key in name input
+      this.playerNameInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+          this.handleNameSubmit()
+        }
       })
 
       // Initialize display values
@@ -438,6 +482,181 @@ export class UIManager {
   }
 
   /**
+   * Show name input modal for leaderboard submission
+   * @param {number} score - Player's final score
+   */
+  showNameInputModal(score) {
+    if (this.nameInputModal && this.nameInputScoreElement && this.playerNameInput) {
+      // Update score display
+      this.nameInputScoreElement.textContent = score.toString()
+      
+      // Clear previous input and validation
+      this.playerNameInput.value = ''
+      this.hideNameValidationError()
+      this.playerNameInput.classList.remove('invalid')
+      
+      // Show the modal with fade-in effect
+      this.nameInputModal.classList.remove('hidden')
+      this.nameInputModal.style.opacity = '0'
+      this.nameInputModal.style.transition = 'opacity 0.3s ease'
+      
+      setTimeout(() => {
+        this.nameInputModal.style.opacity = '1'
+      }, 10)
+      
+      // Focus on input field for better UX
+      setTimeout(() => {
+        if (this.playerNameInput) {
+          this.playerNameInput.focus()
+        }
+      }, 400)
+      
+      console.log('Name input modal shown for score:', score)
+    }
+  }
+
+  /**
+   * Hide name input modal
+   */
+  hideNameInputModal() {
+    if (this.nameInputModal) {
+      // Fade out effect
+      this.nameInputModal.style.opacity = '0'
+      this.nameInputModal.style.transition = 'opacity 0.3s ease'
+      
+      setTimeout(() => {
+        this.nameInputModal.classList.add('hidden')
+        this.nameInputModal.style.opacity = '1'
+      }, 300)
+    }
+  }
+
+  /**
+   * Validate player name input
+   * @param {string} name - Name to validate
+   * @returns {boolean} - True if valid
+   */
+  validatePlayerName(name) {
+    if (!name || typeof name !== 'string') {
+      return false
+    }
+    
+    // Trim whitespace for validation
+    const trimmedName = name.trim()
+    
+    // Check length (1-20 characters after trimming)
+    if (trimmedName.length < 1 || trimmedName.length > 20) {
+      return false
+    }
+    
+    // Check for alphanumeric characters and spaces only
+    // Must contain at least one non-space character
+    const validNameRegex = /^[a-zA-Z0-9\s]+$/
+    const hasNonSpaceChar = /[a-zA-Z0-9]/.test(trimmedName)
+    
+    return validNameRegex.test(trimmedName) && hasNonSpaceChar
+  }
+
+  /**
+   * Validate name input field in real-time
+   */
+  validatePlayerNameInput() {
+    if (!this.playerNameInput) return
+    
+    const name = this.playerNameInput.value.trim()
+    const isValid = this.validatePlayerName(name)
+    
+    if (name.length === 0) {
+      // Empty input - hide error, remove invalid styling
+      this.hideNameValidationError()
+      this.playerNameInput.classList.remove('invalid')
+    } else if (!isValid) {
+      // Invalid input - show error and invalid styling
+      this.showNameValidationError()
+      this.playerNameInput.classList.add('invalid')
+    } else {
+      // Valid input - hide error, remove invalid styling
+      this.hideNameValidationError()
+      this.playerNameInput.classList.remove('invalid')
+    }
+    
+    return isValid
+  }
+
+  /**
+   * Show name validation error
+   */
+  showNameValidationError() {
+    if (this.nameValidationError) {
+      this.nameValidationError.classList.remove('hidden')
+    }
+  }
+
+  /**
+   * Hide name validation error
+   */
+  hideNameValidationError() {
+    if (this.nameValidationError) {
+      this.nameValidationError.classList.add('hidden')
+    }
+  }
+
+  /**
+   * Handle name submit button click
+   */
+  handleNameSubmit() {
+    if (!this.playerNameInput) return
+    
+    const name = this.playerNameInput.value.trim()
+    
+    // Validate name before submission
+    if (!this.validatePlayerName(name)) {
+      this.showNameValidationError()
+      this.playerNameInput.classList.add('invalid')
+      this.playerNameInput.focus()
+      return
+    }
+    
+    // Hide modal and call callback
+    this.hideNameInputModal()
+    
+    if (this.onNameSubmitCallback) {
+      this.onNameSubmitCallback(name, this.currentScore)
+    }
+    
+    console.log('Name submitted:', name, 'Score:', this.currentScore)
+  }
+
+  /**
+   * Handle name cancel button click
+   */
+  handleNameCancel() {
+    this.hideNameInputModal()
+    
+    if (this.onNameCancelCallback) {
+      this.onNameCancelCallback()
+    }
+    
+    console.log('Name input cancelled')
+  }
+
+  /**
+   * Set callback for name submission
+   * @param {Function} callback - Function to call when name is submitted (name, score)
+   */
+  setNameSubmitCallback(callback) {
+    this.onNameSubmitCallback = callback
+  }
+
+  /**
+   * Set callback for name cancellation
+   * @param {Function} callback - Function to call when name input is cancelled
+   */
+  setNameCancelCallback(callback) {
+    this.onNameCancelCallback = callback
+  }
+
+  /**
    * Clean up resources and event listeners
    */
   dispose() {
@@ -445,12 +664,33 @@ export class UIManager {
       this.restartButton.removeEventListener('click', this.handleRestart)
     }
     
+    if (this.submitNameButton) {
+      this.submitNameButton.removeEventListener('click', this.handleNameSubmit)
+    }
+    
+    if (this.cancelNameButton) {
+      this.cancelNameButton.removeEventListener('click', this.handleNameCancel)
+    }
+    
+    if (this.playerNameInput) {
+      this.playerNameInput.removeEventListener('input', this.validatePlayerNameInput)
+      this.playerNameInput.removeEventListener('keypress', this.handleNameSubmit)
+    }
+    
     this.timerElement = null
     this.scoreElement = null
     this.gameOverModal = null
     this.finalScoreElement = null
     this.restartButton = null
+    this.nameInputModal = null
+    this.nameInputScoreElement = null
+    this.playerNameInput = null
+    this.submitNameButton = null
+    this.cancelNameButton = null
+    this.nameValidationError = null
     this.onRestartCallback = null
+    this.onNameSubmitCallback = null
+    this.onNameCancelCallback = null
     
     console.log('UIManager disposed')
   }
