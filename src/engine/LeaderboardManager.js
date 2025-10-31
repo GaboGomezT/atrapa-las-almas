@@ -333,12 +333,12 @@ export class LeaderboardManager {
    * Handle leaderboard modal close from UI
    */
   handleLeaderboardClose() {
-    console.log('Leaderboard closed, returning to menu')
+    console.log('Leaderboard closed, starting new game')
     this.isProcessing = false
     this.currentPlayerData = null
     
     if (this.gameEngine) {
-      this.gameEngine.returnToMenuFromLeaderboard()
+      this.gameEngine.restartGame()
     }
   }
 
