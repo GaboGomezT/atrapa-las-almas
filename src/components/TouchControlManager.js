@@ -7,7 +7,7 @@ export class TouchControlManager {
     this.virtualJoystick = null
     this.joystickKnob = null
     this.touchControls = null
-    
+
     // Touch state
     this.isActive = false
     this.touchId = null
@@ -16,16 +16,26 @@ export class TouchControlManager {
     this.currentX = 0
     this.currentY = 0
     this.maxDistance = 50 // Maximum distance from center
-    
+
     // Input vector
     this.inputVector = { x: 0, z: 0 }
-    
+
     // Device detection
     this.isMobile = this.detectMobileDevice()
     this.isTouch = 'ontouchstart' in window
-    
+
     // Control state
     this.controlsEnabled = true
+
+    // Store event handler references for proper cleanup
+    this.boundTouchStart = null
+    this.boundTouchMove = null
+    this.boundTouchEnd = null
+    this.boundMouseStart = null
+    this.boundMouseMove = null
+    this.boundMouseEnd = null
+    this.boundOrientationChange = null
+    this.boundResize = null
   }
 
   /**
@@ -118,33 +128,35 @@ export class TouchControlManager {
   setupEventListeners() {
     if (!this.virtualJoystick) return
 
+    // Create bound functions for proper cleanup
+    this.boundTouchStart = (e) => this.handleTouchStart(e)
+    this.boundTouchMove = (e) => this.handleTouchMove(e)
+    this.boundTouchEnd = (e) => this.handleTouchEnd(e)
+    this.boundMouseStart = (e) => this.handleMouseStart(e)
+    this.boundMouseMove = (e) => this.handleMouseMove(e)
+    this.boundMouseEnd = (e) => this.handleMouseEnd(e)
+    this.boundOrientationChange = () => {
+      setTimeout(() => {
+        this.updateLayout()
+      }, 100)
+    }
+    this.boundResize = () => this.updateLayout()
+
     // Touch start
-    this.virtualJoystick.addEventListener('touchstart', (e) => {
-      this.handleTouchStart(e)
-    }, { passive: false })
+    this.virtualJoystick.addEventListener('touchstart', this.boundTouchStart, { passive: false })
 
     // Touch move
-    document.addEventListener('touchmove', (e) => {
-      this.handleTouchMove(e)
-    }, { passive: false })
+    document.addEventListener('touchmove', this.boundTouchMove, { passive: false })
 
     // Touch end
-    document.addEventListener('touchend', (e) => {
-      this.handleTouchEnd(e)
-    }, { passive: false })
+    document.addEventListener('touchend', this.boundTouchEnd, { passive: false })
 
     // Mouse events for testing on desktop
-    this.virtualJoystick.addEventListener('mousedown', (e) => {
-      this.handleMouseStart(e)
-    })
+    this.virtualJoystick.addEventListener('mousedown', this.boundMouseStart)
 
-    document.addEventListener('mousemove', (e) => {
-      this.handleMouseMove(e)
-    })
+    document.addEventListener('mousemove', this.boundMouseMove)
 
-    document.addEventListener('mouseup', (e) => {
-      this.handleMouseEnd(e)
-    })
+    document.addEventListener('mouseup', this.boundMouseEnd)
 
     // Prevent context menu on long press
     this.virtualJoystick.addEventListener('contextmenu', (e) => {
@@ -152,16 +164,10 @@ export class TouchControlManager {
     })
 
     // Handle orientation change
-    window.addEventListener('orientationchange', () => {
-      setTimeout(() => {
-        this.updateLayout()
-      }, 100)
-    })
+    window.addEventListener('orientationchange', this.boundOrientationChange)
 
     // Handle resize
-    window.addEventListener('resize', () => {
-      this.updateLayout()
-    })
+    window.addEventListener('resize', this.boundResize)
   }
 
   /**
@@ -401,19 +407,17 @@ export class TouchControlManager {
     if (this.isMobile || this.isTouch) {
       this.showMobileControls()
     }
-    
-    // Re-add touch event listeners
-    if (this.virtualJoystick) {
-      this.virtualJoystick.addEventListener('touchstart', (e) => {
-        this.handleTouchStart(e)
-      }, { passive: false })
+
+    // Re-add touch event listeners using stored references
+    if (this.virtualJoystick && this.boundTouchStart) {
+      this.virtualJoystick.addEventListener('touchstart', this.boundTouchStart, { passive: false })
     }
-    document.addEventListener('touchmove', (e) => {
-      this.handleTouchMove(e)
-    }, { passive: false })
-    document.addEventListener('touchend', (e) => {
-      this.handleTouchEnd(e)
-    }, { passive: false })
+    if (this.boundTouchMove) {
+      document.addEventListener('touchmove', this.boundTouchMove, { passive: false })
+    }
+    if (this.boundTouchEnd) {
+      document.addEventListener('touchend', this.boundTouchEnd, { passive: false })
+    }
   }
 
   /**
@@ -423,13 +427,17 @@ export class TouchControlManager {
     this.controlsEnabled = false
     this.hideMobileControls()
     this.endTouch() // End any active touch
-    
-    // Temporarily remove touch event listeners to completely prevent interference
-    if (this.virtualJoystick) {
-      this.virtualJoystick.removeEventListener('touchstart', this.handleTouchStart)
+
+    // Remove touch event listeners to prevent interference
+    if (this.virtualJoystick && this.boundTouchStart) {
+      this.virtualJoystick.removeEventListener('touchstart', this.boundTouchStart)
     }
-    document.removeEventListener('touchmove', this.handleTouchMove)
-    document.removeEventListener('touchend', this.handleTouchEnd)
+    if (this.boundTouchMove) {
+      document.removeEventListener('touchmove', this.boundTouchMove)
+    }
+    if (this.boundTouchEnd) {
+      document.removeEventListener('touchend', this.boundTouchEnd)
+    }
   }
 
   /**
@@ -437,21 +445,37 @@ export class TouchControlManager {
    */
   dispose() {
     if (this.virtualJoystick) {
-      this.virtualJoystick.removeEventListener('touchstart', this.handleTouchStart)
-      this.virtualJoystick.removeEventListener('mousedown', this.handleMouseStart)
+      if (this.boundTouchStart) {
+        this.virtualJoystick.removeEventListener('touchstart', this.boundTouchStart)
+      }
+      if (this.boundMouseStart) {
+        this.virtualJoystick.removeEventListener('mousedown', this.boundMouseStart)
+      }
       this.virtualJoystick.removeEventListener('contextmenu', (e) => e.preventDefault())
     }
-    
-    document.removeEventListener('touchmove', this.handleTouchMove)
-    document.removeEventListener('touchend', this.handleTouchEnd)
-    document.removeEventListener('mousemove', this.handleMouseMove)
-    document.removeEventListener('mouseup', this.handleMouseEnd)
-    
-    window.removeEventListener('orientationchange', this.updateLayout)
-    window.removeEventListener('resize', this.updateLayout)
-    
+
+    if (this.boundTouchMove) {
+      document.removeEventListener('touchmove', this.boundTouchMove)
+    }
+    if (this.boundTouchEnd) {
+      document.removeEventListener('touchend', this.boundTouchEnd)
+    }
+    if (this.boundMouseMove) {
+      document.removeEventListener('mousemove', this.boundMouseMove)
+    }
+    if (this.boundMouseEnd) {
+      document.removeEventListener('mouseup', this.boundMouseEnd)
+    }
+
+    if (this.boundOrientationChange) {
+      window.removeEventListener('orientationchange', this.boundOrientationChange)
+    }
+    if (this.boundResize) {
+      window.removeEventListener('resize', this.boundResize)
+    }
+
     this.hideMobileControls()
-    
+
     console.log('TouchControlManager disposed')
   }
 }
