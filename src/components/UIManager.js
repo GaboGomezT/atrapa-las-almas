@@ -10,6 +10,9 @@ export class UIManager {
     this.finalScoreElement = null
     this.restartButton = null
     
+    // Touch control manager reference
+    this.touchControlManager = null
+    
     // Name input modal elements
     this.nameInputModal = null
     this.nameInputScoreElement = null
@@ -556,6 +559,11 @@ export class UIManager {
    */
   showNameInputModal(score) {
     if (this.nameInputModal && this.nameInputScoreElement && this.playerNameInput) {
+      // Disable touch controls to prevent interference with modal
+      if (this.touchControlManager) {
+        this.touchControlManager.disableControls()
+      }
+      
       // Update score display
       this.nameInputScoreElement.textContent = score.toString()
       
@@ -589,6 +597,11 @@ export class UIManager {
    */
   hideNameInputModal() {
     if (this.nameInputModal) {
+      // Re-enable touch controls when modal is hidden
+      if (this.touchControlManager) {
+        this.touchControlManager.enableControls()
+      }
+      
       // Fade out effect
       this.nameInputModal.style.opacity = '0'
       this.nameInputModal.style.transition = 'opacity 0.3s ease'
@@ -740,6 +753,11 @@ export class UIManager {
       return
     }
 
+    // Disable touch controls to prevent interference with modal
+    if (this.touchControlManager) {
+      this.touchControlManager.disableControls()
+    }
+
     const { playerName, playerScore, playerRank, topScores, message } = leaderboardData
 
     // Update player result message
@@ -815,6 +833,11 @@ export class UIManager {
    */
   hideLeaderboardModal() {
     if (this.leaderboardModal) {
+      // Re-enable touch controls when modal is hidden
+      if (this.touchControlManager) {
+        this.touchControlManager.enableControls()
+      }
+      
       // Fade out effect
       this.leaderboardModal.style.opacity = '0'
       this.leaderboardModal.style.transition = 'opacity 0.3s ease'
@@ -848,6 +871,14 @@ export class UIManager {
   }
 
   /**
+   * Set touch control manager reference
+   * @param {TouchControlManager} touchControlManager - Touch control manager instance
+   */
+  setTouchControlManager(touchControlManager) {
+    this.touchControlManager = touchControlManager
+  }
+
+  /**
    * Show network error modal with retry and offline options
    * @param {string} message - Error message to display
    * @param {Function} retryCallback - Function to call when retry is clicked
@@ -857,6 +888,11 @@ export class UIManager {
     if (!this.networkErrorModal || !this.networkErrorMessage) {
       console.error('Network error modal elements not found')
       return
+    }
+
+    // Disable touch controls to prevent interference with modal
+    if (this.touchControlManager) {
+      this.touchControlManager.disableControls()
     }
 
     // Store callbacks for button handlers
@@ -890,6 +926,11 @@ export class UIManager {
    */
   hideNetworkErrorModal() {
     if (this.networkErrorModal) {
+      // Re-enable touch controls when modal is hidden
+      if (this.touchControlManager) {
+        this.touchControlManager.enableControls()
+      }
+      
       // Fade out effect
       this.networkErrorModal.style.opacity = '0'
       this.networkErrorModal.style.transition = 'opacity 0.3s ease'
@@ -915,6 +956,11 @@ export class UIManager {
     if (!this.apiErrorModal || !this.apiErrorMessage) {
       console.error('API error modal elements not found')
       return
+    }
+
+    // Disable touch controls to prevent interference with modal
+    if (this.touchControlManager) {
+      this.touchControlManager.disableControls()
     }
 
     // Store callbacks for button handlers
@@ -948,6 +994,11 @@ export class UIManager {
    */
   hideApiErrorModal() {
     if (this.apiErrorModal) {
+      // Re-enable touch controls when modal is hidden
+      if (this.touchControlManager) {
+        this.touchControlManager.enableControls()
+      }
+      
       // Fade out effect
       this.apiErrorModal.style.opacity = '0'
       this.apiErrorModal.style.transition = 'opacity 0.3s ease'
@@ -1026,6 +1077,11 @@ export class UIManager {
     if (!this.leaderboardModal || !this.playerResultMessage || !this.leaderboardList) {
       console.error('Leaderboard modal elements not found')
       return
+    }
+
+    // Disable touch controls to prevent interference with modal
+    if (this.touchControlManager) {
+      this.touchControlManager.disableControls()
     }
 
     const { playerName, playerScore, message } = playerData
@@ -1137,6 +1193,7 @@ export class UIManager {
     this.skipLeaderboardButton = null
     this.currentRetryCallback = null
     this.currentSkipCallback = null
+    this.touchControlManager = null
     this.onRestartCallback = null
     this.onNameSubmitCallback = null
     this.onNameCancelCallback = null

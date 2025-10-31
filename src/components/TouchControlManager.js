@@ -383,6 +383,23 @@ export class TouchControlManager {
   }
 
   /**
+   * Enable touch controls
+   */
+  enableControls() {
+    if (this.isMobile || this.isTouch) {
+      this.showMobileControls()
+    }
+  }
+
+  /**
+   * Disable touch controls (useful when modals are shown)
+   */
+  disableControls() {
+    this.hideMobileControls()
+    this.endTouch() // End any active touch
+  }
+
+  /**
    * Clean up resources and event listeners
    */
   dispose() {

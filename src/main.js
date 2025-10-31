@@ -151,6 +151,11 @@ async function initGame() {
     // Initialize touch controls for mobile
     touchControlManager = new TouchControlManager()
     touchControlManager.init()
+    
+    // Set touch control manager reference in UI manager
+    if (uiManager && touchControlManager) {
+      uiManager.setTouchControlManager(touchControlManager)
+    }
 
     // Initialize render engine
     renderEngine = new RenderEngine()
