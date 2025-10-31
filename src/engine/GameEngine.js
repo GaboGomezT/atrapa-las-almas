@@ -41,13 +41,13 @@ export class GameEngine {
     
     // Timer and scoring system
     this.score = 0
-    this.timeRemaining = 60 // seconds
+    this.timeRemaining = 30 // seconds
     this.gameTimer = null
     this.timerUpdateInterval = 100 // Update timer every 100ms for smooth display
     
     // Game configuration
     this.config = {
-      GAME_DURATION: 60, // seconds
+      GAME_DURATION: 30, // seconds
       FIELD_SIZE: { x: 10, z: 10 },
       SOUL_COUNT: 10, // Reduced from 15 to 10
       SOUL_SPAWN_RATE: 1.5, // Reduced from 2 to 1.5 souls per second
@@ -702,12 +702,12 @@ export class GameEngine {
       
       // Play countdown sounds
       if (this.soundManager) {
-        // Warning sound for last 10 seconds
-        if (this.timeRemaining <= 10 && previousTime > 10) {
+        // Warning sound for last 5 seconds
+        if (this.timeRemaining <= 5 && previousTime > 5) {
           this.soundManager.playCountdownWarning()
         }
-        // Tick sound for last 5 seconds
-        else if (this.timeRemaining <= 5 && Math.floor(this.timeRemaining) !== Math.floor(previousTime)) {
+        // Tick sound for last 3 seconds
+        else if (this.timeRemaining <= 3 && Math.floor(this.timeRemaining) !== Math.floor(previousTime)) {
           this.soundManager.playCountdownTick()
         }
       }
@@ -873,7 +873,7 @@ export class GameEngine {
     this.lastTime = 0
     this.deltaTime = 0
     this.score = 0
-    this.timeRemaining = 60
+    this.timeRemaining = 30
     
     console.log('GameEngine disposed')
   }

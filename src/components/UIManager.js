@@ -36,7 +36,7 @@ export class UIManager {
     
     // Game state tracking
     this.currentScore = 0
-    this.timeRemaining = 60
+    this.timeRemaining = 30
     this.isGameActive = false
     
     // Error handling state
@@ -190,10 +190,10 @@ export class UIManager {
       
       // Add visual warning when time is running low
       const timerDisplay = this.timerElement.parentElement
-      if (this.timeRemaining <= 10) {
+      if (this.timeRemaining <= 5) {
         timerDisplay.style.color = '#ff4444'
         timerDisplay.style.animation = 'pulse 1s infinite'
-      } else if (this.timeRemaining <= 30) {
+      } else if (this.timeRemaining <= 15) {
         timerDisplay.style.color = '#ffaa00'
         timerDisplay.style.animation = 'none'
       } else {
@@ -306,7 +306,7 @@ export class UIManager {
    */
   resetUI() {
     this.currentScore = 0
-    this.timeRemaining = 60
+    this.timeRemaining = 30
     this.isGameActive = true
     
     this.updateTimerDisplay(this.timeRemaining)

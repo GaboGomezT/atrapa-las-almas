@@ -7,7 +7,7 @@ export class GameManager {
     this.uiManager = uiManager
     this.gameTimer = null
     this.gameStartTime = null
-    this.gameDuration = 60 // 60 seconds
+    this.gameDuration = 30 // 30 seconds
     this.isGameActive = false
     this.score = 0
     
