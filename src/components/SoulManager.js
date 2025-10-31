@@ -13,12 +13,12 @@ export class SoulManager {
     
     // Soul management
     this.activeSouls = new Map() // Active souls in the game
-    this.soulPool = new SoulPool(Soul, renderEngine, 15) // Optimized object pool
+    this.soulPool = new SoulPool(Soul, renderEngine, 12) // Optimized object pool (reduced from 15)
     this.nextSoulId = 0
     
     // Spawning configuration
-    this.maxSouls = 15 // Maximum souls on field at once
-    this.spawnRate = 2.0 // Souls per second
+    this.maxSouls = 10 // Maximum souls on field at once (reduced from 15)
+    this.spawnRate = 1.5 // Souls per second (reduced from 2.0)
     this.spawnTimer = 0
     this.spawnInterval = 1.0 / this.spawnRate
     this.isSpawningPaused = false
@@ -242,7 +242,7 @@ export class SoulManager {
   reset() {
     this.clearAllSouls()
     this.spawnTimer = 0
-    this.resumeSpawning(2.0) // Reset to default spawn rate
+    this.resumeSpawning(1.5) // Reset to default spawn rate (reduced from 2.0)
     console.log('SoulManager reset for new game')
   }
 

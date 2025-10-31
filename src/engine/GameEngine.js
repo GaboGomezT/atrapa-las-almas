@@ -47,8 +47,8 @@ export class GameEngine {
     this.config = {
       GAME_DURATION: 60, // seconds
       FIELD_SIZE: { x: 10, z: 10 },
-      SOUL_COUNT: 15,
-      SOUL_SPAWN_RATE: 2,
+      SOUL_COUNT: 10, // Reduced from 15 to 10
+      SOUL_SPAWN_RATE: 1.5, // Reduced from 2 to 1.5 souls per second
       PLAYER_SPEED: 8,
       COLLISION_RADIUS: 1.5
     }

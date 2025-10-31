@@ -12,14 +12,25 @@ export class Soul {
     
     // Animation properties
     this.floatOffset = Math.random() * Math.PI * 2 // Random phase offset
-    this.floatSpeed = 0.8 + Math.random() * 0.4 // 0.8-1.2 speed variation
-    this.floatRange = 0.3 + Math.random() * 0.2 // 0.3-0.5 range variation
-    this.rotationSpeed = 0.5 + Math.random() * 0.3 // Rotation speed variation
+    this.floatSpeed = 1.8 + Math.random() * 1.2 // 1.8-3.0 speed variation (much faster)
+    this.floatRange = 0.5 + Math.random() * 0.4 // 0.5-0.9 range variation (more movement)
+    this.rotationSpeed = 1.2 + Math.random() * 0.8 // Even faster rotation
     
-    // Horizontal drift properties for more organic movement
+    // Horizontal drift properties for more erratic movement
     this.driftOffset = Math.random() * Math.PI * 2
-    this.driftSpeed = 0.3 + Math.random() * 0.2
-    this.driftRange = 0.8 + Math.random() * 0.4
+    this.driftSpeed = 1.0 + Math.random() * 1.2 // 1.0-2.2 speed (much faster)
+    this.driftRange = 1.5 + Math.random() * 1.0 // 1.5-2.5 range (wider movement)
+    
+    // Erratic movement properties
+    this.erraticTimer = 0
+    this.erraticInterval = 0.3 + Math.random() * 0.8 // Change direction every 0.3-1.1 seconds (more frequent)
+    this.erraticDirection = new THREE.Vector3(
+      (Math.random() - 0.5) * 2,
+      (Math.random() - 0.5) * 0.5,
+      (Math.random() - 0.5) * 2
+    ).normalize()
+    this.erraticSpeed = 1.5 + Math.random() * 2.5 // 1.5-4.0 speed multiplier (faster)
+    this.erraticIntensity = 0.4 + Math.random() * 0.5 // 0.4-0.9 intensity (more intense)
     
     // Visual properties
     this.glowIntensity = 0.7 + Math.random() * 0.3
@@ -196,7 +207,31 @@ export class Soul {
     // Skip normal animations if collected
     if (this.isCollected) return
     
-    // Update float animation
+    // Update erratic movement timer
+    this.erraticTimer += deltaTime
+    
+    // Change erratic direction periodically
+    if (this.erraticTimer >= this.erraticInterval) {
+      this.erraticTimer = 0
+      this.erraticInterval = 0.2 + Math.random() * 0.9 // New random interval (more frequent changes)
+      
+      // Generate new random direction
+      this.erraticDirection.set(
+        (Math.random() - 0.5) * 2,
+        (Math.random() - 0.5) * 0.8,
+        (Math.random() - 0.5) * 2
+      ).normalize()
+      
+      // Vary the speed randomly (faster speeds)
+      this.erraticSpeed = 1.2 + Math.random() * 3.0 // 1.2-4.2 speed range
+      
+      // Brief glow pulse when changing direction
+      if (this.mesh && this.mesh.material) {
+        this.mesh.material.emissiveIntensity = Math.min(1.0, this.mesh.material.emissiveIntensity + 0.3)
+      }
+    }
+    
+    // Update float animation (vertical bobbing)
     this.floatOffset += deltaTime * this.floatSpeed
     const floatY = Math.sin(this.floatOffset) * this.floatRange
     
@@ -205,10 +240,26 @@ export class Soul {
     const driftX = Math.sin(this.driftOffset) * this.driftRange
     const driftZ = Math.cos(this.driftOffset * 0.7) * this.driftRange * 0.6
     
-    // Apply position updates
-    this.position.x = this.initialPosition.x + driftX
-    this.position.y = this.initialPosition.y + floatY
-    this.position.z = this.initialPosition.z + driftZ
+    // Add erratic movement on top of drift
+    const erraticMovement = this.erraticDirection.clone()
+    erraticMovement.multiplyScalar(this.erraticSpeed * this.erraticIntensity * deltaTime)
+    
+    // Apply position updates with erratic movement
+    this.position.x = this.initialPosition.x + driftX + erraticMovement.x
+    this.position.y = this.initialPosition.y + floatY + erraticMovement.y
+    this.position.z = this.initialPosition.z + driftZ + erraticMovement.z
+    
+    // Keep souls within reasonable bounds (prevent them from going too far)
+    const maxDistance = 9.0 // Increased from 8.0 to accommodate faster movement
+    const distanceFromCenter = Math.sqrt(this.position.x * this.position.x + this.position.z * this.position.z)
+    if (distanceFromCenter > maxDistance) {
+      const scale = maxDistance / distanceFromCenter
+      this.position.x *= scale
+      this.position.z *= scale
+    }
+    
+    // Keep souls at reasonable height
+    this.position.y = Math.max(0.5, Math.min(6.0, this.position.y))
     
     this.mesh.position.copy(this.position)
     
@@ -396,7 +447,7 @@ export class Soul {
    * @returns {number} Collision radius
    */
   getCollisionRadius() {
-    return 0.6 // Slightly larger than visual radius for easier collection
+    return 0.5 // Reduced from 0.6 to make souls harder to catch
   }
 
   /**
@@ -408,14 +459,25 @@ export class Soul {
     
     // Reset animation properties with new random values
     this.floatOffset = Math.random() * Math.PI * 2
-    this.floatSpeed = 0.8 + Math.random() * 0.4
-    this.floatRange = 0.3 + Math.random() * 0.2
-    this.rotationSpeed = 0.5 + Math.random() * 0.3
+    this.floatSpeed = 1.8 + Math.random() * 1.2
+    this.floatRange = 0.5 + Math.random() * 0.4
+    this.rotationSpeed = 1.2 + Math.random() * 0.8
     this.driftOffset = Math.random() * Math.PI * 2
-    this.driftSpeed = 0.3 + Math.random() * 0.2
-    this.driftRange = 0.8 + Math.random() * 0.4
+    this.driftSpeed = 1.0 + Math.random() * 1.2
+    this.driftRange = 1.5 + Math.random() * 1.0
     this.glowIntensity = 0.7 + Math.random() * 0.3
     this.pulseSpeed = 1.5 + Math.random() * 0.5
+    
+    // Reset erratic movement properties
+    this.erraticTimer = 0
+    this.erraticInterval = 0.3 + Math.random() * 0.8
+    this.erraticDirection = new THREE.Vector3(
+      (Math.random() - 0.5) * 2,
+      (Math.random() - 0.5) * 0.5,
+      (Math.random() - 0.5) * 2
+    ).normalize()
+    this.erraticSpeed = 1.5 + Math.random() * 2.5
+    this.erraticIntensity = 0.4 + Math.random() * 0.5
     
     // Reset mesh properties if mesh exists
     if (this.mesh) {
