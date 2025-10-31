@@ -186,7 +186,15 @@ export class Soul {
    * @param {number} deltaTime - Time since last update in seconds
    */
   update(deltaTime) {
-    if (!this.mesh || this.isCollected) return
+    if (!this.mesh) return
+    
+    // Handle collection animation first
+    if (this.collectionAnimation > 0) {
+      this.updateCollectionAnimation(deltaTime)
+    }
+    
+    // Skip normal animations if collected
+    if (this.isCollected) return
     
     // Update float animation
     this.floatOffset += deltaTime * this.floatSpeed
@@ -227,11 +235,6 @@ export class Soul {
     
     // Animate particles
     this.animateParticles(deltaTime)
-    
-    // Handle collection animation
-    if (this.collectionAnimation > 0) {
-      this.updateCollectionAnimation(deltaTime)
-    }
   }
 
   /**
@@ -281,8 +284,10 @@ export class Soul {
     
     // Increase glow intensity for collection effect
     if (this.mesh && this.mesh.material) {
-      this.mesh.material.emissiveIntensity = 1.0
+      this.mesh.material.emissiveIntensity = 1.5
     }
+    
+    console.log(`Soul ${this.id} collected - starting disappear animation`)
   }
 
   /**
@@ -290,37 +295,59 @@ export class Soul {
    * @param {number} deltaTime - Time since last update
    */
   updateCollectionAnimation(deltaTime) {
-    this.collectionAnimation -= deltaTime * 3.0 // 3 second animation
+    this.collectionAnimation -= deltaTime * 4.0 // Fast animation (0.25 seconds)
     
     if (this.collectionAnimation <= 0) {
       this.collectionAnimation = 0
       return
     }
     
+    // Calculate animation progress (0 = start, 1 = end)
+    const progress = 1.0 - this.collectionAnimation
+    
     // Scale up and fade out
-    const scale = 1.0 + (1.0 - this.collectionAnimation) * 2.0
+    const scale = 1.0 + progress * 1.5 // Scale up to 2.5x
     const opacity = this.collectionAnimation * 0.7
+    
+    // Move upward during collection
+    const upwardMovement = progress * 2.0 // Move up 2 units
+    this.mesh.position.y = this.position.y + upwardMovement
     
     this.mesh.scale.setScalar(scale)
     this.mesh.material.opacity = opacity
+    
+    // Increase glow intensity during collection
+    this.mesh.material.emissiveIntensity = 0.3 + progress * 1.2
     
     // Animate glow spheres
     const innerGlow = this.mesh.getObjectByName('inner-glow')
     const outerGlow = this.mesh.getObjectByName('outer-glow')
     
     if (innerGlow) {
-      innerGlow.material.opacity = this.collectionAnimation * 0.4
+      innerGlow.material.opacity = this.collectionAnimation * 0.6
     }
     
     if (outerGlow) {
-      outerGlow.material.opacity = this.collectionAnimation * 0.15
-      outerGlow.scale.setScalar(scale * 1.5)
+      outerGlow.material.opacity = this.collectionAnimation * 0.25
+      outerGlow.scale.setScalar(scale * 1.2)
     }
     
-    // Animate particles during collection
+    // Animate particles during collection - make them spread out
     if (this.particleSystem) {
-      this.particleSystem.material.opacity = this.collectionAnimation * 0.8
-      this.particleSystem.scale.setScalar(scale)
+      this.particleSystem.material.opacity = this.collectionAnimation * 1.2
+      this.particleSystem.scale.setScalar(scale * 1.3)
+      
+      // Add upward particle movement
+      const positions = this.particleSystem.geometry.attributes.position.array
+      const particleCount = positions.length / 3
+      
+      for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3
+        // Move particles upward and outward
+        positions[i3 + 1] += deltaTime * 2.0 * (1 + i * 0.1) // Upward movement
+      }
+      
+      this.particleSystem.geometry.attributes.position.needsUpdate = true
     }
   }
 
@@ -394,6 +421,7 @@ export class Soul {
     if (this.mesh) {
       this.mesh.scale.setScalar(1.0)
       this.mesh.rotation.set(0, 0, 0)
+      this.mesh.position.copy(this.position) // Reset position
       
       if (this.mesh.material) {
         this.mesh.material.opacity = 0.7
