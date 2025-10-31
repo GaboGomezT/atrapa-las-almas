@@ -18,6 +18,12 @@ export class UIManager {
     this.cancelNameButton = null
     this.nameValidationError = null
     
+    // Leaderboard modal elements
+    this.leaderboardModal = null
+    this.playerResultMessage = null
+    this.leaderboardList = null
+    this.closeLeaderboardButton = null
+    
     // Game state tracking
     this.currentScore = 0
     this.timeRemaining = 60
@@ -27,6 +33,7 @@ export class UIManager {
     this.onRestartCallback = null
     this.onNameSubmitCallback = null
     this.onNameCancelCallback = null
+    this.onLeaderboardCloseCallback = null
   }
 
   /**
@@ -68,6 +75,16 @@ export class UIManager {
         throw new Error('Name input modal elements not found')
       }
 
+      // Get leaderboard modal elements
+      this.leaderboardModal = document.getElementById('leaderboard-modal')
+      this.playerResultMessage = document.getElementById('player-result-message')
+      this.leaderboardList = document.getElementById('leaderboard-list')
+      this.closeLeaderboardButton = document.getElementById('close-leaderboard-button')
+
+      if (!this.leaderboardModal || !this.playerResultMessage || !this.leaderboardList || !this.closeLeaderboardButton) {
+        throw new Error('Leaderboard modal elements not found')
+      }
+
       // Set up restart button event listener
       this.restartButton.addEventListener('click', () => {
         this.handleRestart()
@@ -92,6 +109,11 @@ export class UIManager {
         if (event.key === 'Enter') {
           this.handleNameSubmit()
         }
+      })
+
+      // Set up leaderboard modal event listeners
+      this.closeLeaderboardButton.addEventListener('click', () => {
+        this.handleLeaderboardClose()
       })
 
       // Initialize display values
@@ -657,6 +679,128 @@ export class UIManager {
   }
 
   /**
+   * Show leaderboard modal with ranking data
+   * @param {Object} leaderboardData - Leaderboard display data
+   * @param {string} leaderboardData.playerName - Current player's name
+   * @param {number} leaderboardData.playerScore - Player's score
+   * @param {number|null} leaderboardData.playerRank - Player's rank (1-10) or null if not in top 10
+   * @param {Array} leaderboardData.topScores - Array of top 10 player records
+   * @param {string} leaderboardData.message - Display message for player
+   */
+  showLeaderboardModal(leaderboardData) {
+    if (!this.leaderboardModal || !this.playerResultMessage || !this.leaderboardList) {
+      console.error('Leaderboard modal elements not found')
+      return
+    }
+
+    const { playerName, playerScore, playerRank, topScores, message } = leaderboardData
+
+    // Update player result message
+    this.playerResultMessage.textContent = message
+
+    // Clear previous leaderboard entries
+    this.leaderboardList.innerHTML = ''
+
+    // Populate leaderboard list
+    if (topScores && topScores.length > 0) {
+      topScores.forEach((player, index) => {
+        const rank = index + 1
+        const isCurrentPlayer = player.name === playerName && player.score === playerScore
+
+        const leaderboardItem = document.createElement('div')
+        leaderboardItem.className = `leaderboard-item${isCurrentPlayer ? ' highlighted-player' : ''}`
+
+        // Create rank element with special styling for top 3
+        const rankElement = document.createElement('div')
+        rankElement.className = `leaderboard-rank rank-${rank}`
+        rankElement.textContent = `${rank}`
+
+        // Create name element
+        const nameElement = document.createElement('div')
+        nameElement.className = 'leaderboard-name'
+        nameElement.textContent = player.name
+        nameElement.title = player.name // Tooltip for long names
+
+        // Create score element
+        const scoreElement = document.createElement('div')
+        scoreElement.className = 'leaderboard-score'
+        scoreElement.textContent = player.score.toString()
+
+        // Assemble the item
+        leaderboardItem.appendChild(rankElement)
+        leaderboardItem.appendChild(nameElement)
+        leaderboardItem.appendChild(scoreElement)
+
+        this.leaderboardList.appendChild(leaderboardItem)
+      })
+    } else {
+      // Show empty state
+      const emptyMessage = document.createElement('div')
+      emptyMessage.className = 'leaderboard-item'
+      emptyMessage.style.justifyContent = 'center'
+      emptyMessage.style.fontStyle = 'italic'
+      emptyMessage.style.color = '#888'
+      emptyMessage.textContent = 'No hay datos de ranking disponibles'
+      this.leaderboardList.appendChild(emptyMessage)
+    }
+
+    // Show the modal with fade-in effect
+    this.leaderboardModal.classList.remove('hidden')
+    this.leaderboardModal.style.opacity = '0'
+    this.leaderboardModal.style.transition = 'opacity 0.3s ease'
+
+    setTimeout(() => {
+      this.leaderboardModal.style.opacity = '1'
+    }, 10)
+
+    // Focus on close button for accessibility
+    setTimeout(() => {
+      if (this.closeLeaderboardButton) {
+        this.closeLeaderboardButton.focus()
+      }
+    }, 400)
+
+    console.log('Leaderboard modal shown:', leaderboardData)
+  }
+
+  /**
+   * Hide leaderboard modal
+   */
+  hideLeaderboardModal() {
+    if (this.leaderboardModal) {
+      // Fade out effect
+      this.leaderboardModal.style.opacity = '0'
+      this.leaderboardModal.style.transition = 'opacity 0.3s ease'
+
+      setTimeout(() => {
+        this.leaderboardModal.classList.add('hidden')
+        this.leaderboardModal.style.opacity = '1'
+      }, 300)
+    }
+  }
+
+  /**
+   * Handle leaderboard close button click
+   */
+  handleLeaderboardClose() {
+    this.hideLeaderboardModal()
+
+    if (this.onLeaderboardCloseCallback) {
+      this.onLeaderboardCloseCallback()
+    }
+
+    console.log('Leaderboard modal closed')
+  }
+
+  /**
+   * Set callback for leaderboard close
+   * @param {Function} callback - Function to call when leaderboard is closed
+   */
+  setLeaderboardCloseCallback(callback) {
+    this.onLeaderboardCloseCallback = callback
+  }
+
+  /**
    * Clean up resources and event listeners
    */
   dispose() {
@@ -676,6 +820,10 @@ export class UIManager {
       this.playerNameInput.removeEventListener('input', this.validatePlayerNameInput)
       this.playerNameInput.removeEventListener('keypress', this.handleNameSubmit)
     }
+
+    if (this.closeLeaderboardButton) {
+      this.closeLeaderboardButton.removeEventListener('click', this.handleLeaderboardClose)
+    }
     
     this.timerElement = null
     this.scoreElement = null
@@ -688,9 +836,14 @@ export class UIManager {
     this.submitNameButton = null
     this.cancelNameButton = null
     this.nameValidationError = null
+    this.leaderboardModal = null
+    this.playerResultMessage = null
+    this.leaderboardList = null
+    this.closeLeaderboardButton = null
     this.onRestartCallback = null
     this.onNameSubmitCallback = null
     this.onNameCancelCallback = null
+    this.onLeaderboardCloseCallback = null
     
     console.log('UIManager disposed')
   }

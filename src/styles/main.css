@@ -263,6 +263,42 @@ body.mobile-controls-active .mobile-only {
     max-width: 200px;
     margin: 5px 0;
   }
+  
+  .leaderboard-content {
+    max-height: 85vh;
+    padding: 25px 15px;
+  }
+  
+  .leaderboard-list {
+    max-height: 250px;
+    padding: 8px;
+  }
+  
+  .leaderboard-item {
+    padding: 10px 12px;
+    margin-bottom: 6px;
+  }
+  
+  .leaderboard-rank {
+    font-size: 1.1rem;
+    min-width: 35px;
+  }
+  
+  .leaderboard-name {
+    font-size: 1rem;
+    margin: 0 10px;
+  }
+  
+  .leaderboard-score {
+    font-size: 1.1rem;
+    min-width: 50px;
+  }
+  
+  .player-result-message {
+    font-size: 1rem;
+    padding: 10px 12px;
+    margin-bottom: 15px;
+  }
 }
 
 /* Modal Styles */
@@ -400,6 +436,137 @@ body.mobile-controls-active .mobile-only {
 
 .validation-error.hidden {
   display: none;
+}
+
+/* Leaderboard Modal Styles */
+.leaderboard-content {
+  max-width: 500px;
+  width: 95%;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.player-result-message {
+  background: rgba(255, 170, 0, 0.1);
+  border: 1px solid rgba(255, 170, 0, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  color: #ffaa00;
+  font-size: 1.1rem;
+  text-align: center;
+  font-weight: bold;
+}
+
+.leaderboard-container {
+  flex: 1;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.leaderboard-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 2px solid #ff6b35;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #ff6b35 rgba(0, 0, 0, 0.3);
+}
+
+.leaderboard-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.leaderboard-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.leaderboard-list::-webkit-scrollbar-thumb {
+  background: #ff6b35;
+  border-radius: 4px;
+}
+
+.leaderboard-list::-webkit-scrollbar-thumb:hover {
+  background: #ffaa00;
+}
+
+.leaderboard-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.leaderboard-item:last-child {
+  margin-bottom: 0;
+}
+
+.leaderboard-item.highlighted-player {
+  background: linear-gradient(135deg, rgba(255, 170, 0, 0.3) 0%, rgba(255, 107, 53, 0.3) 100%);
+  border-color: #ffaa00;
+  box-shadow: 0 0 15px rgba(255, 170, 0, 0.4);
+  transform: scale(1.02);
+}
+
+.leaderboard-rank {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #ff6b35;
+  min-width: 40px;
+  text-align: center;
+}
+
+.leaderboard-rank.rank-1 {
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+.leaderboard-rank.rank-2 {
+  color: #c0c0c0;
+  text-shadow: 0 0 10px rgba(192, 192, 192, 0.6);
+}
+
+.leaderboard-rank.rank-3 {
+  color: #cd7f32;
+  text-shadow: 0 0 10px rgba(205, 127, 50, 0.6);
+}
+
+.leaderboard-name {
+  flex: 1;
+  font-size: 1.1rem;
+  color: #fff;
+  margin: 0 15px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-score {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #00ff88;
+  min-width: 60px;
+  text-align: right;
+}
+
+.highlighted-player .leaderboard-name {
+  color: #ffaa00;
+  font-weight: bold;
+}
+
+.highlighted-player .leaderboard-score {
+  color: #ffaa00;
 }
 
 .modal-buttons {
@@ -565,6 +732,41 @@ body.mobile-controls-active .mobile-only {
     padding: 10px 20px;
     font-size: 1rem;
     margin-top: 15px;
+  }
+  
+  .leaderboard-content {
+    max-height: 75vh;
+    padding: 15px 10px;
+  }
+  
+  .leaderboard-list {
+    max-height: 200px;
+  }
+  
+  .leaderboard-item {
+    padding: 8px 10px;
+    margin-bottom: 4px;
+  }
+  
+  .leaderboard-rank {
+    font-size: 1rem;
+    min-width: 30px;
+  }
+  
+  .leaderboard-name {
+    font-size: 0.9rem;
+    margin: 0 8px;
+  }
+  
+  .leaderboard-score {
+    font-size: 1rem;
+    min-width: 45px;
+  }
+  
+  .player-result-message {
+    font-size: 0.9rem;
+    padding: 8px 10px;
+    margin-bottom: 12px;
   }
 }
 
