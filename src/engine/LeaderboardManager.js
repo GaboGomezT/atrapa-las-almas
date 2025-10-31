@@ -8,6 +8,7 @@ export class LeaderboardManager {
     this.apiService = apiService
     this.currentPlayerData = null
     this.isProcessing = false
+    this.gameEngine = null // Will be set by GameEngine during initialization
   }
 
   /**
@@ -26,13 +27,13 @@ export class LeaderboardManager {
       // Store the score for later use
       this.currentPlayerData = { score }
       
-      // Show name input modal to collect player name
-      // This will be handled by UIManager in task 3
       console.log('Game ended with score:', score)
-      console.log('Leaderboard flow initiated - waiting for name input modal implementation')
+      console.log('Leaderboard flow initiated - transitioning to name input')
       
-      // For now, we'll prepare the flow but the actual modal interaction
-      // will be implemented when UIManager extensions are added in task 3
+      // Transition GameEngine to name input state
+      if (this.gameEngine) {
+        this.gameEngine.showNameInput()
+      }
       
     } catch (error) {
       console.error('Error in handleGameEnd:', error)
@@ -109,6 +110,11 @@ export class LeaderboardManager {
       }
 
       console.log('Leaderboard data prepared:', leaderboardData)
+      
+      // Transition GameEngine to leaderboard display state
+      if (this.gameEngine) {
+        this.gameEngine.showLeaderboard()
+      }
       
       // Show leaderboard modal (will be implemented in task 4)
       console.log('Ready to show leaderboard modal - waiting for UIManager implementation')
@@ -266,5 +272,57 @@ export class LeaderboardManager {
    */
   getCurrentPlayerData() {
     return this.currentPlayerData
+  }
+
+  /**
+   * Set GameEngine reference for state management
+   * @param {GameEngine} gameEngine - GameEngine instance
+   */
+  setGameEngine(gameEngine) {
+    this.gameEngine = gameEngine
+  }
+
+  /**
+   * Handle name input submission from UI
+   * @param {string} playerName - Player's entered name
+   */
+  async handleNameSubmission(playerName) {
+    if (!this.currentPlayerData) {
+      console.error('No current player data available for name submission')
+      return
+    }
+
+    try {
+      await this.submitScore(playerName, this.currentPlayerData.score)
+    } catch (error) {
+      console.error('Error during name submission:', error)
+      // Handle error appropriately - could show error modal
+    }
+  }
+
+  /**
+   * Handle name input cancellation from UI
+   */
+  handleNameCancellation() {
+    console.log('Name input cancelled, returning to menu')
+    this.isProcessing = false
+    this.currentPlayerData = null
+    
+    if (this.gameEngine) {
+      this.gameEngine.returnToMenuFromLeaderboard()
+    }
+  }
+
+  /**
+   * Handle leaderboard modal close from UI
+   */
+  handleLeaderboardClose() {
+    console.log('Leaderboard closed, returning to menu')
+    this.isProcessing = false
+    this.currentPlayerData = null
+    
+    if (this.gameEngine) {
+      this.gameEngine.returnToMenuFromLeaderboard()
+    }
   }
 }

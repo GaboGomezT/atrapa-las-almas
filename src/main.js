@@ -11,6 +11,8 @@ import { UIManager } from './components/UIManager.js'
 import { TouchControlManager } from './components/TouchControlManager.js'
 import { AssetLoader } from './utils/AssetLoader.js'
 import { SoundManager } from './utils/SoundManager.js'
+import { APIService } from './utils/APIService.js'
+import { LeaderboardManager } from './engine/LeaderboardManager.js'
 
 // Global game instances
 let renderEngine = null
@@ -24,6 +26,8 @@ let uiManager = null
 let touchControlManager = null
 let assetLoader = null
 let soundManager = null
+let apiService = null
+let leaderboardManager = null
 
 // Game state
 let isGameInitialized = false
@@ -134,6 +138,12 @@ async function initGame() {
       throw new Error('Error al inicializar el gestor de interfaz')
     }
 
+    // Initialize API service for leaderboard communication
+    apiService = new APIService()
+
+    // Initialize leaderboard manager
+    leaderboardManager = new LeaderboardManager(uiManager, apiService)
+
     // Load essential assets before continuing
     updateLoadingProgress(10, 'Cargando texturas...')
     await assetLoader.loadEssentialAssets()
@@ -174,7 +184,8 @@ async function initGame() {
       collisionDetector,
       inputManager,
       uiManager,
-      soundManager
+      soundManager,
+      leaderboardManager
     })
 
     // Set up UI restart callback to work with GameEngine
@@ -183,6 +194,24 @@ async function initGame() {
         gameEngine.restartGame()
       }
     })
+
+    // Set up LeaderboardManager with GameEngine reference
+    if (leaderboardManager) {
+      leaderboardManager.setGameEngine(gameEngine)
+      
+      // Set up UI callbacks for leaderboard flow
+      uiManager.setNameSubmitCallback((playerName, score) => {
+        leaderboardManager.handleNameSubmission(playerName)
+      })
+      
+      uiManager.setNameCancelCallback(() => {
+        leaderboardManager.handleNameCancellation()
+      })
+      
+      uiManager.setLeaderboardCloseCallback(() => {
+        leaderboardManager.handleLeaderboardClose()
+      })
+    }
 
     // Start the render loop
     renderEngine.startRenderLoop()
@@ -460,6 +489,15 @@ function cleanup() {
     if (soundManager) {
       soundManager.dispose()
       soundManager = null
+    }
+
+    if (leaderboardManager) {
+      leaderboardManager.reset()
+      leaderboardManager = null
+    }
+
+    if (apiService) {
+      apiService = null
     }
 
     isGameInitialized = false

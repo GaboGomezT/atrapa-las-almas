@@ -32,7 +32,7 @@
   - Add close button and return to menu functionality
   - _Requirements: 2.5, 4.1, 4.2, 4.4, 4.5_
 
-- [ ] 5. Integrate leaderboard system with GameEngine
+- [x] 5. Integrate leaderboard system with GameEngine
   - Modify GameEngine.endGame() method to trigger leaderboard flow
   - Add LeaderboardManager initialization in main.js
   - Connect LeaderboardManager with UIManager and APIService

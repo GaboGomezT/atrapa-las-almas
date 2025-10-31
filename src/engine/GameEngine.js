@@ -19,7 +19,7 @@ import * as THREE from 'three'
 export class GameEngine {
   constructor() {
     // Game state management
-    this.currentState = 'menu' // 'menu', 'playing', 'game-over'
+    this.currentState = 'menu' // 'menu', 'playing', 'game-over', 'name-input', 'leaderboard-display'
     this.previousState = null
     
     // Game systems references
@@ -30,6 +30,7 @@ export class GameEngine {
     this.inputManager = null
     this.uiManager = null
     this.soundManager = null
+    this.leaderboardManager = null
     
     // Game timing
     this.lastTime = 0
@@ -78,6 +79,7 @@ export class GameEngine {
     this.inputManager = systems.inputManager
     this.uiManager = systems.uiManager
     this.soundManager = systems.soundManager
+    this.leaderboardManager = systems.leaderboardManager
     
     // Validate required systems
     this.validateSystems()
@@ -194,6 +196,12 @@ export class GameEngine {
       case 'game-over':
         this.updateGameOverState()
         break
+      case 'name-input':
+        this.updateNameInputState()
+        break
+      case 'leaderboard-display':
+        this.updateLeaderboardDisplayState()
+        break
     }
   }
 
@@ -204,8 +212,8 @@ export class GameEngine {
     // Update environment animations even in menu
     // Note: Environment animations are handled by the main update loop in main.js
     
-    // Check for input to start game
-    if (this.inputManager) {
+    // Check for input to start game (only if not in a modal state)
+    if (this.inputManager && !this.isInModalState()) {
       const inputVector = this.inputManager.getInputVector()
       if (inputVector.x !== 0 || inputVector.z !== 0) {
         this.startGame()
@@ -286,6 +294,42 @@ export class GameEngine {
   }
 
   /**
+   * Update logic for name input state
+   */
+  updateNameInputState() {
+    // Update environment animations
+    // Note: Environment animations are handled by the main update loop in main.js
+    
+    // Keep souls and player visible but don't update gameplay
+    if (this.soulManager) {
+      // Update soul animations but don't spawn new ones
+      this.soulManager.pauseSpawning()
+      this.soulManager.update(this.deltaTime)
+    }
+    
+    // Name input is handled by UIManager modal interactions
+    // No additional input handling needed here
+  }
+
+  /**
+   * Update logic for leaderboard display state
+   */
+  updateLeaderboardDisplayState() {
+    // Update environment animations
+    // Note: Environment animations are handled by the main update loop in main.js
+    
+    // Keep souls and player visible but don't update gameplay
+    if (this.soulManager) {
+      // Update soul animations but don't spawn new ones
+      this.soulManager.pauseSpawning()
+      this.soulManager.update(this.deltaTime)
+    }
+    
+    // Leaderboard display is handled by UIManager modal interactions
+    // No additional input handling needed here
+  }
+
+  /**
    * Start a new game session
    */
   startGame() {
@@ -345,9 +389,23 @@ export class GameEngine {
       this.soulManager.pauseSpawning()
     }
     
-    // Show game over UI
-    if (this.uiManager) {
-      this.uiManager.showGameOverUI(this.getGameState())
+    // Trigger leaderboard flow if LeaderboardManager is available
+    if (this.leaderboardManager) {
+      try {
+        // Don't show game over UI, go directly to leaderboard flow
+        this.leaderboardManager.handleGameEnd(this.score)
+      } catch (error) {
+        console.error('Error starting leaderboard flow:', error)
+        // Fall back to showing game over UI if leaderboard fails
+        if (this.uiManager) {
+          this.uiManager.showGameOverUI(this.getGameState())
+        }
+      }
+    } else {
+      // Show game over UI if no leaderboard manager
+      if (this.uiManager) {
+        this.uiManager.showGameOverUI(this.getGameState())
+      }
     }
   }
 
@@ -368,7 +426,7 @@ export class GameEngine {
   changeState(newState) {
     if (this.currentState === newState) return
     
-    const validStates = ['menu', 'playing', 'game-over']
+    const validStates = ['menu', 'playing', 'game-over', 'name-input', 'leaderboard-display']
     if (!validStates.includes(newState)) {
       console.warn(`Invalid game state: ${newState}`)
       return
@@ -399,6 +457,12 @@ export class GameEngine {
         break
       case 'game-over':
         this.onEnterGameOverState(previousState)
+        break
+      case 'name-input':
+        this.onEnterNameInputState(previousState)
+        break
+      case 'leaderboard-display':
+        this.onEnterLeaderboardDisplayState(previousState)
         break
     }
   }
@@ -445,10 +509,46 @@ export class GameEngine {
       this.soulManager.pauseSpawning()
     }
     
-    // Show game over UI
-    if (this.uiManager) {
+    // Only show game over UI if we don't have a leaderboard manager
+    // (if we have one, we'll transition to leaderboard flow immediately)
+    if (this.uiManager && !this.leaderboardManager) {
       this.uiManager.showGameOverUI(this.getGameState())
     }
+  }
+
+  /**
+   * Handle entering name input state
+   * @param {string} previousState - Previous state
+   */
+  onEnterNameInputState(previousState) {
+    // Pause soul spawning
+    if (this.soulManager) {
+      this.soulManager.pauseSpawning()
+    }
+    
+    // Hide game over modal if it's showing
+    if (this.uiManager && this.uiManager.hideGameOverScreen) {
+      this.uiManager.hideGameOverScreen()
+    }
+    
+    // Show name input modal
+    if (this.uiManager && this.uiManager.showNameInputModal) {
+      this.uiManager.showNameInputModal(this.score)
+    }
+  }
+
+  /**
+   * Handle entering leaderboard display state
+   * @param {string} previousState - Previous state
+   */
+  onEnterLeaderboardDisplayState(previousState) {
+    // Pause soul spawning
+    if (this.soulManager) {
+      this.soulManager.pauseSpawning()
+    }
+    
+    // Leaderboard display will be handled by LeaderboardManager
+    // when it calls UIManager.showLeaderboardModal()
   }
 
   /**
@@ -720,6 +820,35 @@ export class GameEngine {
   }
 
   /**
+   * Transition to name input state for leaderboard flow
+   */
+  showNameInput() {
+    this.changeState('name-input')
+  }
+
+  /**
+   * Transition to leaderboard display state
+   */
+  showLeaderboard() {
+    this.changeState('leaderboard-display')
+  }
+
+  /**
+   * Return to menu from leaderboard flow
+   */
+  returnToMenuFromLeaderboard() {
+    this.changeState('menu')
+  }
+
+  /**
+   * Check if currently in a modal state that should prevent game input
+   * @returns {boolean} True if in a modal state
+   */
+  isInModalState() {
+    return this.currentState === 'name-input' || this.currentState === 'leaderboard-display'
+  }
+
+  /**
    * Clean up game engine resources
    */
   dispose() {
@@ -735,6 +864,7 @@ export class GameEngine {
     this.inputManager = null
     this.uiManager = null
     this.soundManager = null
+    this.leaderboardManager = null
     
     // Reset state
     this.currentState = 'menu'

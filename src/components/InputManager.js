@@ -68,10 +68,10 @@ export class InputManager {
     document.addEventListener('keydown', this.boundKeyDown, false)
     document.addEventListener('keyup', this.boundKeyUp, false)
     
-    // Prevent default behavior for game keys
+    // Prevent default behavior for game keys (but not when typing in input fields)
     document.addEventListener('keydown', (event) => {
       const gameKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD']
-      if (gameKeys.includes(event.code)) {
+      if (gameKeys.includes(event.code) && !this.isTypingInInputField()) {
         event.preventDefault()
       }
     }, false)
@@ -97,6 +97,11 @@ export class InputManager {
    * @param {KeyboardEvent} event - Keyboard event
    */
   handleKeyDown(event) {
+    // Don't capture input if user is typing in an input field
+    if (this.isTypingInInputField()) {
+      return
+    }
+    
     this.keys[event.code] = true
     this.updateInputVector()
   }
@@ -106,6 +111,11 @@ export class InputManager {
    * @param {KeyboardEvent} event - Keyboard event
    */
   handleKeyUp(event) {
+    // Don't capture input if user is typing in an input field
+    if (this.isTypingInInputField()) {
+      return
+    }
+    
     this.keys[event.code] = false
     this.updateInputVector()
   }
@@ -405,6 +415,20 @@ export class InputManager {
    */
   isRestartPressed() {
     return this.keys['KeyR'] || this.keys['Enter'] || this.keys['Space']
+  }
+
+  /**
+   * Check if user is currently typing in an input field
+   * @returns {boolean} True if active element is an input field
+   */
+  isTypingInInputField() {
+    const activeElement = document.activeElement
+    if (!activeElement) return false
+    
+    const inputTypes = ['input', 'textarea', 'select']
+    const tagName = activeElement.tagName.toLowerCase()
+    
+    return inputTypes.includes(tagName) || activeElement.contentEditable === 'true'
   }
 
   /**
