@@ -213,14 +213,14 @@ export class LeaderboardManager {
    */
   determinePlayerMessage(playerName, playerScore, topScores, playerRank) {
     if (!Array.isArray(topScores) || topScores.length === 0) {
-      return `Great job, ${playerName}! Your score: ${playerScore}. Leaderboard unavailable.`
+      return `¡Buen trabajo, ${playerName}! Tu puntuación: ${playerScore}. Ranking no disponible.`
     }
 
     if (playerRank) {
       if (playerRank === 1) {
-        return `Congratulations ${playerName}! You're #1 with ${playerScore} points!`
+        return `¡Felicidades ${playerName}! ¡Eres el #1 con ${playerScore} puntos!`
       } else {
-        return `Well done ${playerName}! You ranked #${playerRank} with ${playerScore} points!`
+        return `¡Bien hecho ${playerName}! Te ubicaste en el puesto #${playerRank} con ${playerScore} puntos!`
       }
     } else {
       // Player didn't make top 10 (Requirement 4.4)
@@ -228,10 +228,10 @@ export class LeaderboardManager {
       const lowestTopScore = topScores[topScores.length - 1]?.score || 0
       
       if (playerScore > lowestTopScore) {
-        return `Good effort ${playerName}! Your score: ${playerScore}. You're close to the top 10!`
+        return `¡Buen esfuerzo ${playerName}! Tu puntuación: ${playerScore}. ¡Estás cerca del top 10!`
       } else {
         const pointsNeeded = lowestTopScore - playerScore + 1
-        return `Nice try ${playerName}! Your score: ${playerScore}. You need ${pointsNeeded} more points to reach the top 10.`
+        return `¡Buen intento ${playerName}! Tu puntuación: ${playerScore}. Necesitas ${pointsNeeded} puntos más para llegar al top 10.`
       }
     }
   }
