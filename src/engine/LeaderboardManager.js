@@ -246,7 +246,7 @@ export class LeaderboardManager {
     
     const errorResponse = {
       type: 'api_error',
-      message: error.message || 'An unexpected error occurred',
+      message: error.message || 'Ocurrió un error inesperado',
       canRetry: true,
       timestamp: new Date().toISOString()
     }
@@ -256,11 +256,11 @@ export class LeaderboardManager {
         error.message.includes('Network error') ||
         error.message.includes('Server error')) {
       errorResponse.canRetry = true
-      errorResponse.message = 'Connection problem. Would you like to try again?'
+      errorResponse.message = 'Problema de conexión. ¿Te gustaría intentar de nuevo?'
     } else if (error.message.includes('Invalid request') ||
                error.message.includes('validation')) {
       errorResponse.canRetry = false
-      errorResponse.message = 'Invalid data. Please check your input.'
+      errorResponse.message = 'Datos inválidos. Por favor verifica tu información.'
     }
 
     return errorResponse

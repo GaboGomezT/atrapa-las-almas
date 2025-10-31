@@ -111,16 +111,16 @@ export class APIService {
       
       // Validate response format
       if (!Array.isArray(data)) {
-        throw new Error('Invalid response format: expected array')
+        throw new Error('Formato de respuesta inválido: se esperaba un arreglo')
       }
       
       // Validate each score object
       data.forEach((score, index) => {
         if (!score.name || typeof score.name !== 'string') {
-          throw new Error(`Invalid score object at index ${index}: missing or invalid name`)
+          throw new Error(`Objeto de puntuación inválido en índice ${index}: nombre faltante o inválido`)
         }
         if (typeof score.score !== 'number') {
-          throw new Error(`Invalid score object at index ${index}: missing or invalid score`)
+          throw new Error(`Objeto de puntuación inválido en índice ${index}: puntuación faltante o inválida`)
         }
       })
       
@@ -141,21 +141,21 @@ export class APIService {
   async submitScore(playerName, score) {
     // Validate input parameters
     if (!playerName || typeof playerName !== 'string') {
-      throw new Error('Player name is required and must be a string')
+      throw new Error('El nombre del jugador es requerido y debe ser texto')
     }
     
     if (playerName.length < 1 || playerName.length > 20) {
-      throw new Error('Player name must be between 1 and 20 characters')
+      throw new Error('El nombre del jugador debe tener entre 1 y 20 caracteres')
     }
     
     if (typeof score !== 'number' || score < 0) {
-      throw new Error('Score must be a non-negative number')
+      throw new Error('La puntuación debe ser un número no negativo')
     }
     
     // Validate name contains only alphanumeric characters and spaces
     const nameRegex = /^[a-zA-Z0-9\s]+$/
     if (!nameRegex.test(playerName)) {
-      throw new Error('Player name can only contain letters, numbers, and spaces')
+      throw new Error('El nombre solo puede contener letras, números y espacios')
     }
     
     const payload = {
@@ -213,31 +213,31 @@ export class APIService {
     let processedError
 
     if (error.name === 'AbortError') {
-      processedError = new Error('Request timed out. Please check your internet connection.')
+      processedError = new Error('La solicitud tardó demasiado. Verifica tu conexión a internet.')
       processedError.type = 'timeout'
       processedError.retryable = true
     } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-      processedError = new Error('Network error. Please check your internet connection.')
+      processedError = new Error('Error de red. Verifica tu conexión a internet.')
       processedError.type = 'network'
       processedError.retryable = true
     } else if (error.message.includes('HTTP 404')) {
-      processedError = new Error('Leaderboard service not found. Please try again later.')
+      processedError = new Error('Servicio de ranking no encontrado. Inténtalo más tarde.')
       processedError.type = 'not_found'
       processedError.retryable = false
     } else if (error.message.includes('HTTP 500') || error.message.includes('HTTP 502') || error.message.includes('HTTP 503')) {
-      processedError = new Error('Server error. Please try again later.')
+      processedError = new Error('Error del servidor. Inténtalo más tarde.')
       processedError.type = 'server_error'
       processedError.retryable = true
     } else if (error.message.includes('HTTP 400')) {
-      processedError = new Error('Invalid request. Please check your input.')
+      processedError = new Error('Solicitud inválida. Verifica tu información.')
       processedError.type = 'client_error'
       processedError.retryable = false
     } else if (error.message.includes('HTTP 429')) {
-      processedError = new Error('Too many requests. Please wait a moment and try again.')
+      processedError = new Error('Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.')
       processedError.type = 'rate_limit'
       processedError.retryable = true
     } else {
-      processedError = new Error(error.message || 'An unexpected error occurred.')
+      processedError = new Error(error.message || 'Ocurrió un error inesperado.')
       processedError.type = 'unknown'
       processedError.retryable = true
     }
