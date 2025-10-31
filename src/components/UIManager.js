@@ -24,10 +24,24 @@ export class UIManager {
     this.leaderboardList = null
     this.closeLeaderboardButton = null
     
+    // Error modal elements
+    this.networkErrorModal = null
+    this.networkErrorMessage = null
+    this.retryNetworkButton = null
+    this.continueOfflineButton = null
+    this.apiErrorModal = null
+    this.apiErrorMessage = null
+    this.retryApiButton = null
+    this.skipLeaderboardButton = null
+    
     // Game state tracking
     this.currentScore = 0
     this.timeRemaining = 60
     this.isGameActive = false
+    
+    // Error handling state
+    this.currentRetryCallback = null
+    this.currentSkipCallback = null
     
     // Callbacks
     this.onRestartCallback = null
@@ -85,6 +99,22 @@ export class UIManager {
         throw new Error('Leaderboard modal elements not found')
       }
 
+      // Get error modal elements
+      this.networkErrorModal = document.getElementById('network-error-modal')
+      this.networkErrorMessage = document.getElementById('network-error-message')
+      this.retryNetworkButton = document.getElementById('retry-network-button')
+      this.continueOfflineButton = document.getElementById('continue-offline-button')
+      this.apiErrorModal = document.getElementById('api-error-modal')
+      this.apiErrorMessage = document.getElementById('api-error-message')
+      this.retryApiButton = document.getElementById('retry-api-button')
+      this.skipLeaderboardButton = document.getElementById('skip-leaderboard-button')
+
+      if (!this.networkErrorModal || !this.networkErrorMessage || !this.retryNetworkButton || 
+          !this.continueOfflineButton || !this.apiErrorModal || !this.apiErrorMessage || 
+          !this.retryApiButton || !this.skipLeaderboardButton) {
+        throw new Error('Error modal elements not found')
+      }
+
       // Set up restart button event listener
       this.restartButton.addEventListener('click', () => {
         this.handleRestart()
@@ -114,6 +144,23 @@ export class UIManager {
       // Set up leaderboard modal event listeners
       this.closeLeaderboardButton.addEventListener('click', () => {
         this.handleLeaderboardClose()
+      })
+
+      // Set up error modal event listeners
+      this.retryNetworkButton.addEventListener('click', () => {
+        this.handleNetworkRetry()
+      })
+
+      this.continueOfflineButton.addEventListener('click', () => {
+        this.handleContinueOffline()
+      })
+
+      this.retryApiButton.addEventListener('click', () => {
+        this.handleApiRetry()
+      })
+
+      this.skipLeaderboardButton.addEventListener('click', () => {
+        this.handleSkipLeaderboard()
       })
 
       // Initialize display values
@@ -801,6 +848,230 @@ export class UIManager {
   }
 
   /**
+   * Show network error modal with retry and offline options
+   * @param {string} message - Error message to display
+   * @param {Function} retryCallback - Function to call when retry is clicked
+   * @param {Function} skipCallback - Function to call when continue offline is clicked
+   */
+  showNetworkErrorModal(message, retryCallback, skipCallback) {
+    if (!this.networkErrorModal || !this.networkErrorMessage) {
+      console.error('Network error modal elements not found')
+      return
+    }
+
+    // Store callbacks for button handlers
+    this.currentRetryCallback = retryCallback
+    this.currentSkipCallback = skipCallback
+
+    // Update error message
+    this.networkErrorMessage.textContent = message || 'No se pudo conectar con el servidor. Verifica tu conexión a internet.'
+
+    // Show the modal with fade-in effect
+    this.networkErrorModal.classList.remove('hidden')
+    this.networkErrorModal.style.opacity = '0'
+    this.networkErrorModal.style.transition = 'opacity 0.3s ease'
+
+    setTimeout(() => {
+      this.networkErrorModal.style.opacity = '1'
+    }, 10)
+
+    // Focus on retry button for accessibility
+    setTimeout(() => {
+      if (this.retryNetworkButton) {
+        this.retryNetworkButton.focus()
+      }
+    }, 400)
+
+    console.log('Network error modal shown:', message)
+  }
+
+  /**
+   * Hide network error modal
+   */
+  hideNetworkErrorModal() {
+    if (this.networkErrorModal) {
+      // Fade out effect
+      this.networkErrorModal.style.opacity = '0'
+      this.networkErrorModal.style.transition = 'opacity 0.3s ease'
+
+      setTimeout(() => {
+        this.networkErrorModal.classList.add('hidden')
+        this.networkErrorModal.style.opacity = '1'
+      }, 300)
+    }
+
+    // Clear callbacks
+    this.currentRetryCallback = null
+    this.currentSkipCallback = null
+  }
+
+  /**
+   * Show API error modal with retry and skip options
+   * @param {string} message - Error message to display
+   * @param {Function} retryCallback - Function to call when retry is clicked
+   * @param {Function} skipCallback - Function to call when skip is clicked
+   */
+  showApiErrorModal(message, retryCallback, skipCallback) {
+    if (!this.apiErrorModal || !this.apiErrorMessage) {
+      console.error('API error modal elements not found')
+      return
+    }
+
+    // Store callbacks for button handlers
+    this.currentRetryCallback = retryCallback
+    this.currentSkipCallback = skipCallback
+
+    // Update error message
+    this.apiErrorMessage.textContent = message || 'Hubo un problema con el servidor. Por favor, inténtalo de nuevo.'
+
+    // Show the modal with fade-in effect
+    this.apiErrorModal.classList.remove('hidden')
+    this.apiErrorModal.style.opacity = '0'
+    this.apiErrorModal.style.transition = 'opacity 0.3s ease'
+
+    setTimeout(() => {
+      this.apiErrorModal.style.opacity = '1'
+    }, 10)
+
+    // Focus on retry button for accessibility
+    setTimeout(() => {
+      if (this.retryApiButton) {
+        this.retryApiButton.focus()
+      }
+    }, 400)
+
+    console.log('API error modal shown:', message)
+  }
+
+  /**
+   * Hide API error modal
+   */
+  hideApiErrorModal() {
+    if (this.apiErrorModal) {
+      // Fade out effect
+      this.apiErrorModal.style.opacity = '0'
+      this.apiErrorModal.style.transition = 'opacity 0.3s ease'
+
+      setTimeout(() => {
+        this.apiErrorModal.classList.add('hidden')
+        this.apiErrorModal.style.opacity = '1'
+      }, 300)
+    }
+
+    // Clear callbacks
+    this.currentRetryCallback = null
+    this.currentSkipCallback = null
+  }
+
+  /**
+   * Handle network retry button click
+   */
+  handleNetworkRetry() {
+    this.hideNetworkErrorModal()
+
+    if (this.currentRetryCallback) {
+      this.currentRetryCallback()
+    }
+
+    console.log('Network retry requested')
+  }
+
+  /**
+   * Handle continue offline button click
+   */
+  handleContinueOffline() {
+    this.hideNetworkErrorModal()
+
+    if (this.currentSkipCallback) {
+      this.currentSkipCallback()
+    }
+
+    console.log('Continue offline requested')
+  }
+
+  /**
+   * Handle API retry button click
+   */
+  handleApiRetry() {
+    this.hideApiErrorModal()
+
+    if (this.currentRetryCallback) {
+      this.currentRetryCallback()
+    }
+
+    console.log('API retry requested')
+  }
+
+  /**
+   * Handle skip leaderboard button click
+   */
+  handleSkipLeaderboard() {
+    this.hideApiErrorModal()
+
+    if (this.currentSkipCallback) {
+      this.currentSkipCallback()
+    }
+
+    console.log('Skip leaderboard requested')
+  }
+
+  /**
+   * Show fallback leaderboard display for offline scenarios
+   * @param {Object} playerData - Player's data for offline display
+   * @param {string} playerData.playerName - Player's name
+   * @param {number} playerData.playerScore - Player's score
+   * @param {string} playerData.message - Message to display
+   */
+  showOfflineLeaderboardModal(playerData) {
+    if (!this.leaderboardModal || !this.playerResultMessage || !this.leaderboardList) {
+      console.error('Leaderboard modal elements not found')
+      return
+    }
+
+    const { playerName, playerScore, message } = playerData
+
+    // Update player result message
+    this.playerResultMessage.textContent = message || `¡Bien hecho ${playerName}! Tu puntuación: ${playerScore}. Ranking no disponible sin conexión.`
+
+    // Clear previous leaderboard entries and show offline message
+    this.leaderboardList.innerHTML = ''
+
+    const offlineMessage = document.createElement('div')
+    offlineMessage.className = 'leaderboard-item'
+    offlineMessage.style.justifyContent = 'center'
+    offlineMessage.style.fontStyle = 'italic'
+    offlineMessage.style.color = '#ffaa00'
+    offlineMessage.style.textAlign = 'center'
+    offlineMessage.style.padding = '20px'
+    offlineMessage.innerHTML = `
+      <div style="text-align: center;">
+        <div style="font-size: 1.2rem; margin-bottom: 10px;">📡</div>
+        <div>Ranking no disponible</div>
+        <div style="font-size: 0.9rem; margin-top: 5px; color: #ccc;">Conecta a internet para ver el ranking global</div>
+      </div>
+    `
+    this.leaderboardList.appendChild(offlineMessage)
+
+    // Show the modal with fade-in effect
+    this.leaderboardModal.classList.remove('hidden')
+    this.leaderboardModal.style.opacity = '0'
+    this.leaderboardModal.style.transition = 'opacity 0.3s ease'
+
+    setTimeout(() => {
+      this.leaderboardModal.style.opacity = '1'
+    }, 10)
+
+    // Focus on close button for accessibility
+    setTimeout(() => {
+      if (this.closeLeaderboardButton) {
+        this.closeLeaderboardButton.focus()
+      }
+    }, 400)
+
+    console.log('Offline leaderboard modal shown:', playerData)
+  }
+
+  /**
    * Clean up resources and event listeners
    */
   dispose() {
@@ -824,6 +1095,22 @@ export class UIManager {
     if (this.closeLeaderboardButton) {
       this.closeLeaderboardButton.removeEventListener('click', this.handleLeaderboardClose)
     }
+
+    if (this.retryNetworkButton) {
+      this.retryNetworkButton.removeEventListener('click', this.handleNetworkRetry)
+    }
+
+    if (this.continueOfflineButton) {
+      this.continueOfflineButton.removeEventListener('click', this.handleContinueOffline)
+    }
+
+    if (this.retryApiButton) {
+      this.retryApiButton.removeEventListener('click', this.handleApiRetry)
+    }
+
+    if (this.skipLeaderboardButton) {
+      this.skipLeaderboardButton.removeEventListener('click', this.handleSkipLeaderboard)
+    }
     
     this.timerElement = null
     this.scoreElement = null
@@ -840,6 +1127,16 @@ export class UIManager {
     this.playerResultMessage = null
     this.leaderboardList = null
     this.closeLeaderboardButton = null
+    this.networkErrorModal = null
+    this.networkErrorMessage = null
+    this.retryNetworkButton = null
+    this.continueOfflineButton = null
+    this.apiErrorModal = null
+    this.apiErrorMessage = null
+    this.retryApiButton = null
+    this.skipLeaderboardButton = null
+    this.currentRetryCallback = null
+    this.currentSkipCallback = null
     this.onRestartCallback = null
     this.onNameSubmitCallback = null
     this.onNameCancelCallback = null

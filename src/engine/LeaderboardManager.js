@@ -51,16 +51,34 @@ export class LeaderboardManager {
     try {
       console.log(`Submitting score for ${playerName}: ${score}`)
       
+      // Check network availability first (Requirement 5.1)
+      if (!this.apiService.isNetworkAvailable()) {
+        console.warn('Network not available, showing offline leaderboard')
+        this.showOfflineLeaderboard(playerName, score)
+        return
+      }
+
       // First, fetch current top scores to determine if player qualifies
       let topScores = []
       let fetchError = null
       
       try {
-        topScores = await this.apiService.getTopScoresWithRetry()
+        topScores = await this.apiService.getTopScoresWithCaching()
         console.log('Fetched current top scores:', topScores)
       } catch (error) {
         console.error('Failed to fetch top scores:', error)
         fetchError = error
+        
+        // Handle fetch error with retry option (Requirement 5.2)
+        if (this.shouldShowRetryForError(error)) {
+          this.showNetworkErrorWithRetry(error, () => {
+            this.submitScore(playerName, score)
+          }, () => {
+            this.showOfflineLeaderboard(playerName, score)
+          })
+          return
+        }
+        
         // Continue with submission attempt even if fetch fails
       }
 
@@ -79,7 +97,7 @@ export class LeaderboardManager {
           
           // Fetch updated leaderboard after successful submission (Requirement 3.5)
           try {
-            updatedTopScores = await this.apiService.getTopScoresWithRetry()
+            updatedTopScores = await this.apiService.getTopScoresWithCaching()
             console.log('Fetched updated leaderboard:', updatedTopScores)
           } catch (error) {
             console.error('Failed to fetch updated leaderboard:', error)
@@ -89,6 +107,18 @@ export class LeaderboardManager {
         } catch (error) {
           console.error('Failed to submit score:', error)
           submissionError = error
+          
+          // Handle submission error with retry option (Requirement 5.3)
+          if (this.shouldShowRetryForError(error)) {
+            this.showApiErrorWithRetry(error, () => {
+              this.submitScore(playerName, score)
+            }, () => {
+              // Show leaderboard without submission
+              this.showLeaderboardWithoutSubmission(playerName, score, topScores)
+            })
+            return
+          }
+          
           // Continue to show leaderboard even if submission fails (Requirement 5.2)
         }
       }
@@ -116,8 +146,8 @@ export class LeaderboardManager {
         this.gameEngine.showLeaderboard()
       }
       
-      // Show leaderboard modal (will be implemented in task 4)
-      console.log('Ready to show leaderboard modal - waiting for UIManager implementation')
+      // Show leaderboard modal
+      this.uiManager.showLeaderboardModal(leaderboardData)
       
       return leaderboardData
       
@@ -125,21 +155,7 @@ export class LeaderboardManager {
       console.error('Error in submitScore:', error)
       
       // Handle critical errors (Requirement 5.2, 5.3)
-      const errorData = {
-        playerName,
-        playerScore: score,
-        playerRank: null,
-        topScores: [],
-        message: 'Unable to process leaderboard request. Please try again.',
-        errors: {
-          criticalError: error
-        }
-      }
-      
-      // Show error modal (will be implemented in task 6)
-      console.log('Critical error occurred - ready to show error modal')
-      
-      throw error
+      this.handleCriticalError(error, playerName, score)
       
     } finally {
       this.isProcessing = false
@@ -324,5 +340,162 @@ export class LeaderboardManager {
     if (this.gameEngine) {
       this.gameEngine.returnToMenuFromLeaderboard()
     }
+  }
+
+  /**
+   * Determine if an error should trigger a retry dialog
+   * @param {Error} error - The error to evaluate
+   * @returns {boolean} True if retry should be offered
+   */
+  shouldShowRetryForError(error) {
+    // Don't retry for validation errors or client errors
+    if (error.type === 'client_error' || error.type === 'not_found') {
+      return false
+    }
+    
+    // Retry for network, timeout, and server errors
+    return error.retryable === true || 
+           error.type === 'network' || 
+           error.type === 'timeout' || 
+           error.type === 'server_error' ||
+           error.type === 'rate_limit'
+  }
+
+  /**
+   * Show network error modal with retry functionality (Requirement 5.1, 5.2)
+   * @param {Error} error - The network error
+   * @param {Function} retryCallback - Function to call on retry
+   * @param {Function} skipCallback - Function to call on skip
+   */
+  showNetworkErrorWithRetry(error, retryCallback, skipCallback) {
+    let message = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.'
+    
+    if (error.type === 'timeout') {
+      message = 'La conexión tardó demasiado. Verifica tu conexión a internet.'
+    } else if (error.type === 'network') {
+      message = 'Error de red. Verifica tu conexión a internet.'
+    }
+
+    this.uiManager.showNetworkErrorModal(message, retryCallback, skipCallback)
+  }
+
+  /**
+   * Show API error modal with retry functionality (Requirement 5.3)
+   * @param {Error} error - The API error
+   * @param {Function} retryCallback - Function to call on retry
+   * @param {Function} skipCallback - Function to call on skip
+   */
+  showApiErrorWithRetry(error, retryCallback, skipCallback) {
+    let message = 'Hubo un problema con el servidor. Por favor, inténtalo de nuevo.'
+    
+    if (error.type === 'server_error') {
+      message = 'El servidor está experimentando problemas. Inténtalo de nuevo en unos momentos.'
+    } else if (error.type === 'rate_limit') {
+      message = 'Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.'
+    }
+
+    this.uiManager.showApiErrorModal(message, retryCallback, skipCallback)
+  }
+
+  /**
+   * Show offline leaderboard when network is unavailable (Requirement 5.1, 5.2)
+   * @param {string} playerName - Player's name
+   * @param {number} score - Player's score
+   */
+  showOfflineLeaderboard(playerName, score) {
+    console.log('Showing offline leaderboard for:', playerName, score)
+    
+    const offlineData = {
+      playerName,
+      playerScore: score,
+      message: `¡Bien hecho ${playerName}! Tu puntuación: ${score}. Conecta a internet para ver el ranking global.`
+    }
+
+    // Transition GameEngine to leaderboard display state
+    if (this.gameEngine) {
+      this.gameEngine.showLeaderboard()
+    }
+
+    this.uiManager.showOfflineLeaderboardModal(offlineData)
+  }
+
+  /**
+   * Show leaderboard without score submission (fallback scenario)
+   * @param {string} playerName - Player's name
+   * @param {number} score - Player's score
+   * @param {Array} topScores - Available top scores
+   */
+  showLeaderboardWithoutSubmission(playerName, score, topScores) {
+    console.log('Showing leaderboard without submission for:', playerName, score)
+    
+    const leaderboardData = {
+      playerName,
+      playerScore: score,
+      playerRank: null,
+      topScores: topScores || [],
+      message: `Tu puntuación: ${score}. No se pudo guardar en el ranking, pero aquí están los mejores puntajes.`,
+      errors: {
+        submissionFailed: true
+      }
+    }
+
+    // Transition GameEngine to leaderboard display state
+    if (this.gameEngine) {
+      this.gameEngine.showLeaderboard()
+    }
+
+    this.uiManager.showLeaderboardModal(leaderboardData)
+  }
+
+  /**
+   * Handle critical errors that prevent any leaderboard functionality
+   * @param {Error} error - The critical error
+   * @param {string} playerName - Player's name
+   * @param {number} score - Player's score
+   */
+  handleCriticalError(error, playerName, score) {
+    console.error('Critical error in leaderboard flow:', error)
+    
+    // Log the error for debugging
+    this.apiService.logError('Critical leaderboard error', {
+      playerName,
+      score,
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    })
+
+    // Show basic offline leaderboard as fallback
+    this.showOfflineLeaderboard(playerName, score)
+  }
+
+  /**
+   * Test API connectivity and handle results
+   * @returns {Promise<boolean>} True if API is available
+   */
+  async testApiConnectivity() {
+    try {
+      const isConnected = await this.apiService.testConnectivity()
+      console.log('API connectivity test result:', isConnected)
+      return isConnected
+    } catch (error) {
+      console.error('API connectivity test failed:', error)
+      return false
+    }
+  }
+
+  /**
+   * Get error logs for debugging purposes
+   * @returns {Array} Array of error log objects
+   */
+  getErrorLogs() {
+    return this.apiService.getErrorLogs()
+  }
+
+  /**
+   * Clear error logs
+   */
+  clearErrorLogs() {
+    this.apiService.clearErrorLogs()
   }
 }

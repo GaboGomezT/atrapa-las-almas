@@ -76,6 +76,34 @@
       </div>
     </div>
 
+    <!-- Network Error Modal -->
+    <div id="network-error-modal" class="modal hidden">
+      <div class="modal-content error-content">
+        <h2>Error de Conexión</h2>
+        <div id="network-error-message" class="error-message">
+          No se pudo conectar con el servidor. Verifica tu conexión a internet.
+        </div>
+        <div class="modal-buttons">
+          <button id="retry-network-button" class="btn-primary">Reintentar</button>
+          <button id="continue-offline-button" class="btn-secondary">Continuar sin Ranking</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- API Error Modal -->
+    <div id="api-error-modal" class="modal hidden">
+      <div class="modal-content error-content">
+        <h2>Error del Servidor</h2>
+        <div id="api-error-message" class="error-message">
+          Hubo un problema con el servidor. Por favor, inténtalo de nuevo.
+        </div>
+        <div class="modal-buttons">
+          <button id="retry-api-button" class="btn-primary">Reintentar</button>
+          <button id="skip-leaderboard-button" class="btn-secondary">Omitir Ranking</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Game Over Modal -->
     <div id="game-over-modal" class="modal hidden">
       <div class="modal-content">
