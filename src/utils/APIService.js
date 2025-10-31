@@ -3,10 +3,16 @@
  * Provides methods for fetching top scores and submitting player scores
  */
 export class APIService {
-  constructor(baseURL = '/api', timeout = 10000) {
+  constructor(baseURL = 'https://atrapa-almas-microservice.vercel.app/api', timeout = 10000) {
     this.baseURL = baseURL
     this.timeout = timeout
     this.retryAttempts = 1
+    
+    // Hardcoded endpoint URLs
+    this.endpoints = {
+      topScores: 'https://atrapa-almas-microservice.vercel.app/api/leaderboard/top10',
+      submitScore: 'https://atrapa-almas-microservice.vercel.app/api/leaderboard/submit'
+    }
   }
 
   /**
@@ -83,7 +89,25 @@ export class APIService {
    */
   async getTopScores() {
     try {
-      const data = await this.get('/leaderboard/top10')
+      // Use hardcoded endpoint URL with proper headers (CORS now handled by server)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+      
+      const response = await fetch(this.endpoints.topScores, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
       
       // Validate response format
       if (!Array.isArray(data)) {
@@ -140,13 +164,32 @@ export class APIService {
     }
     
     try {
-      const response = await this.post('/leaderboard/submit', payload)
+      // Use hardcoded endpoint URL with proper headers (CORS now handled by server)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+      
+      const response = await fetch(this.endpoints.submitScore, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      const result = await response.json()
       console.log('Score submitted successfully:', payload)
-      return response
+      return result
       
     } catch (error) {
       console.error('Error submitting score:', error)
-      throw error
+      throw this.handleNetworkError(error)
     }
   }
 
@@ -444,7 +487,7 @@ export class APIService {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 5000) // Shorter timeout for connectivity test
       
-      const response = await fetch(`${this.baseURL}/leaderboard/top10`, {
+      const response = await fetch(this.endpoints.topScores, {
         method: 'HEAD', // Lightweight request
         signal: controller.signal
       })
@@ -461,7 +504,7 @@ export class APIService {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 5000)
         
-        const response = await fetch(`${this.baseURL}/leaderboard/top10`, {
+        const response = await fetch(this.endpoints.topScores, {
           method: 'GET',
           signal: controller.signal
         })
