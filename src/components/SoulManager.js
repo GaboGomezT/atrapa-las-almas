@@ -306,6 +306,16 @@ export class SoulManager {
   }
 
   /**
+   * Reset the soul manager for a new game
+   */
+  reset() {
+    this.clearAllSouls()
+    this.spawnTimer = 0
+    this.resumeSpawning(2.0) // Reset to default spawn rate
+    console.log('SoulManager reset for new game')
+  }
+
+  /**
    * Get performance statistics
    * @returns {Object} Performance stats
    */

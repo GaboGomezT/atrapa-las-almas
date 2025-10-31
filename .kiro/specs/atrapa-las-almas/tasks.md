@@ -90,20 +90,20 @@
     - Test game state transitions
     - _Requirements: 3.1, 3.2, 3.4_
 
-- [ ] 6. Build user interface and HUD system
-  - [ ] 6.1 Create UIManager class for interface elements
+- [x] 6. Build user interface and HUD system
+  - [x] 6.1 Create UIManager class for interface elements
     - Implement timer display in top-center position
     - Add score counter in top-left position
     - Create responsive CSS layout for different screen sizes
     - _Requirements: 3.2, 3.3, 6.1_
 
-  - [ ] 6.2 Implement game over screen and restart functionality
+  - [x] 6.2 Implement game over screen and restart functionality
     - Create game over modal with final score display
     - Add congratulatory message "Las almas agradecen tu guía"
     - Implement restart button to begin new game session
     - _Requirements: 5.1, 5.2, 5.3_
 
-  - [ ] 6.3 Add mobile-specific UI enhancements
+  - [x] 6.3 Add mobile-specific UI enhancements
     - Create touch control overlay for mobile devices
     - Implement responsive scaling for different screen sizes
     - Add touch-friendly button sizes and spacing
