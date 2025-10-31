@@ -129,7 +129,7 @@ export class InputManager {
    */
   handleTouchStart(event) {
     if (!this.touchControlsEnabled) {
-      return // Don't handle touch events when disabled
+      return // Don't handle touch events when disabled - allow default behavior
     }
     
     event.preventDefault()
@@ -153,7 +153,7 @@ export class InputManager {
    */
   handleTouchMove(event) {
     if (!this.touchControlsEnabled) {
-      return // Don't handle touch events when disabled
+      return // Don't handle touch events when disabled - allow default behavior
     }
     
     event.preventDefault()
@@ -174,7 +174,7 @@ export class InputManager {
    */
   handleTouchEnd(event) {
     if (!this.touchControlsEnabled) {
-      return // Don't handle touch events when disabled
+      return // Don't handle touch events when disabled - allow default behavior
     }
     
     event.preventDefault()
@@ -400,12 +400,7 @@ export class InputManager {
     return this.isTouch
   }
 
-  /**
-   * Enable touch controls
-   */
-  enableTouchControls() {
-    this.touchControlsEnabled = true
-  }
+
 
   /**
    * Disable touch controls (useful when modals are shown)
@@ -417,6 +412,23 @@ export class InputManager {
     this.inputVector.x = 0
     this.inputVector.z = 0
     this.hideVirtualJoystick()
+    
+    // Temporarily remove touch event listeners to completely prevent interference
+    document.removeEventListener('touchstart', this.boundTouchStart)
+    document.removeEventListener('touchmove', this.boundTouchMove)
+    document.removeEventListener('touchend', this.boundTouchEnd)
+  }
+
+  /**
+   * Enable touch controls
+   */
+  enableTouchControls() {
+    this.touchControlsEnabled = true
+    
+    // Re-add touch event listeners
+    document.addEventListener('touchstart', this.boundTouchStart, { passive: false })
+    document.addEventListener('touchmove', this.boundTouchMove, { passive: false })
+    document.addEventListener('touchend', this.boundTouchEnd, { passive: false })
   }
 
   /**

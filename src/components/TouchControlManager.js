@@ -23,6 +23,9 @@ export class TouchControlManager {
     // Device detection
     this.isMobile = this.detectMobileDevice()
     this.isTouch = 'ontouchstart' in window
+    
+    // Control state
+    this.controlsEnabled = true
   }
 
   /**
@@ -166,6 +169,10 @@ export class TouchControlManager {
    * @param {TouchEvent} e - Touch event
    */
   handleTouchStart(e) {
+    if (!this.controlsEnabled) {
+      return // Don't handle touch events when disabled - allow default behavior
+    }
+    
     e.preventDefault()
     
     if (e.touches.length > 0) {
@@ -179,7 +186,9 @@ export class TouchControlManager {
    * @param {TouchEvent} e - Touch event
    */
   handleTouchMove(e) {
-    if (!this.isActive) return
+    if (!this.controlsEnabled || !this.isActive) {
+      return // Don't handle touch events when disabled - allow default behavior
+    }
     
     e.preventDefault()
     
@@ -197,7 +206,9 @@ export class TouchControlManager {
    * @param {TouchEvent} e - Touch event
    */
   handleTouchEnd(e) {
-    if (!this.isActive) return
+    if (!this.controlsEnabled || !this.isActive) {
+      return // Don't handle touch events when disabled - allow default behavior
+    }
     
     // Check if our touch ended
     let touchEnded = true
@@ -386,17 +397,39 @@ export class TouchControlManager {
    * Enable touch controls
    */
   enableControls() {
+    this.controlsEnabled = true
     if (this.isMobile || this.isTouch) {
       this.showMobileControls()
     }
+    
+    // Re-add touch event listeners
+    if (this.virtualJoystick) {
+      this.virtualJoystick.addEventListener('touchstart', (e) => {
+        this.handleTouchStart(e)
+      }, { passive: false })
+    }
+    document.addEventListener('touchmove', (e) => {
+      this.handleTouchMove(e)
+    }, { passive: false })
+    document.addEventListener('touchend', (e) => {
+      this.handleTouchEnd(e)
+    }, { passive: false })
   }
 
   /**
    * Disable touch controls (useful when modals are shown)
    */
   disableControls() {
+    this.controlsEnabled = false
     this.hideMobileControls()
     this.endTouch() // End any active touch
+    
+    // Temporarily remove touch event listeners to completely prevent interference
+    if (this.virtualJoystick) {
+      this.virtualJoystick.removeEventListener('touchstart', this.handleTouchStart)
+    }
+    document.removeEventListener('touchmove', this.handleTouchMove)
+    document.removeEventListener('touchend', this.handleTouchEnd)
   }
 
   /**
