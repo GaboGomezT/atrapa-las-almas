@@ -16,6 +16,9 @@ export class InputManager {
     this.touchSensitivity = 0.003
     this.maxTouchDistance = 100
     
+    // Control state
+    this.touchControlsEnabled = true
+    
     // Virtual joystick elements
     this.joystickContainer = null
     this.joystickKnob = null
@@ -125,6 +128,10 @@ export class InputManager {
    * @param {TouchEvent} event - Touch event
    */
   handleTouchStart(event) {
+    if (!this.touchControlsEnabled) {
+      return // Don't handle touch events when disabled
+    }
+    
     event.preventDefault()
     
     if (event.touches.length > 0) {
@@ -145,6 +152,10 @@ export class InputManager {
    * @param {TouchEvent} event - Touch event
    */
   handleTouchMove(event) {
+    if (!this.touchControlsEnabled) {
+      return // Don't handle touch events when disabled
+    }
+    
     event.preventDefault()
     
     if (this.touchActive && event.touches.length > 0) {
@@ -162,6 +173,10 @@ export class InputManager {
    * @param {TouchEvent} event - Touch event
    */
   handleTouchEnd(event) {
+    if (!this.touchControlsEnabled) {
+      return // Don't handle touch events when disabled
+    }
+    
     event.preventDefault()
     
     this.touchActive = false
@@ -383,6 +398,25 @@ export class InputManager {
    */
   isUsingTouch() {
     return this.isTouch
+  }
+
+  /**
+   * Enable touch controls
+   */
+  enableTouchControls() {
+    this.touchControlsEnabled = true
+  }
+
+  /**
+   * Disable touch controls (useful when modals are shown)
+   */
+  disableTouchControls() {
+    this.touchControlsEnabled = false
+    // Reset touch state
+    this.touchActive = false
+    this.inputVector.x = 0
+    this.inputVector.z = 0
+    this.hideVirtualJoystick()
   }
 
   /**

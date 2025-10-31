@@ -12,6 +12,7 @@ export class UIManager {
     
     // Touch control manager reference
     this.touchControlManager = null
+    this.inputManager = null
     
     // Name input modal elements
     this.nameInputModal = null
@@ -563,6 +564,9 @@ export class UIManager {
       if (this.touchControlManager) {
         this.touchControlManager.disableControls()
       }
+      if (this.inputManager) {
+        this.inputManager.disableTouchControls()
+      }
       
       // Update score display
       this.nameInputScoreElement.textContent = score.toString()
@@ -600,6 +604,9 @@ export class UIManager {
       // Re-enable touch controls when modal is hidden
       if (this.touchControlManager) {
         this.touchControlManager.enableControls()
+      }
+      if (this.inputManager) {
+        this.inputManager.enableTouchControls()
       }
       
       // Fade out effect
@@ -757,6 +764,9 @@ export class UIManager {
     if (this.touchControlManager) {
       this.touchControlManager.disableControls()
     }
+    if (this.inputManager) {
+      this.inputManager.disableTouchControls()
+    }
 
     const { playerName, playerScore, playerRank, topScores, message } = leaderboardData
 
@@ -837,6 +847,9 @@ export class UIManager {
       if (this.touchControlManager) {
         this.touchControlManager.enableControls()
       }
+      if (this.inputManager) {
+        this.inputManager.enableTouchControls()
+      }
       
       // Fade out effect
       this.leaderboardModal.style.opacity = '0'
@@ -879,6 +892,14 @@ export class UIManager {
   }
 
   /**
+   * Set input manager reference
+   * @param {InputManager} inputManager - Input manager instance
+   */
+  setInputManager(inputManager) {
+    this.inputManager = inputManager
+  }
+
+  /**
    * Show network error modal with retry and offline options
    * @param {string} message - Error message to display
    * @param {Function} retryCallback - Function to call when retry is clicked
@@ -893,6 +914,9 @@ export class UIManager {
     // Disable touch controls to prevent interference with modal
     if (this.touchControlManager) {
       this.touchControlManager.disableControls()
+    }
+    if (this.inputManager) {
+      this.inputManager.disableTouchControls()
     }
 
     // Store callbacks for button handlers
@@ -930,6 +954,9 @@ export class UIManager {
       if (this.touchControlManager) {
         this.touchControlManager.enableControls()
       }
+      if (this.inputManager) {
+        this.inputManager.enableTouchControls()
+      }
       
       // Fade out effect
       this.networkErrorModal.style.opacity = '0'
@@ -961,6 +988,9 @@ export class UIManager {
     // Disable touch controls to prevent interference with modal
     if (this.touchControlManager) {
       this.touchControlManager.disableControls()
+    }
+    if (this.inputManager) {
+      this.inputManager.disableTouchControls()
     }
 
     // Store callbacks for button handlers
@@ -997,6 +1027,9 @@ export class UIManager {
       // Re-enable touch controls when modal is hidden
       if (this.touchControlManager) {
         this.touchControlManager.enableControls()
+      }
+      if (this.inputManager) {
+        this.inputManager.enableTouchControls()
       }
       
       // Fade out effect
@@ -1082,6 +1115,9 @@ export class UIManager {
     // Disable touch controls to prevent interference with modal
     if (this.touchControlManager) {
       this.touchControlManager.disableControls()
+    }
+    if (this.inputManager) {
+      this.inputManager.disableTouchControls()
     }
 
     const { playerName, playerScore, message } = playerData
@@ -1194,6 +1230,7 @@ export class UIManager {
     this.currentRetryCallback = null
     this.currentSkipCallback = null
     this.touchControlManager = null
+    this.inputManager = null
     this.onRestartCallback = null
     this.onNameSubmitCallback = null
     this.onNameCancelCallback = null

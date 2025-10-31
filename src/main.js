@@ -156,6 +156,11 @@ async function initGame() {
     if (uiManager && touchControlManager) {
       uiManager.setTouchControlManager(touchControlManager)
     }
+    
+    // Set input manager reference in UI manager
+    if (uiManager && inputManager) {
+      uiManager.setInputManager(inputManager)
+    }
 
     // Initialize render engine
     renderEngine = new RenderEngine()
