@@ -200,9 +200,7 @@ export class GameEngine {
    */
   updateMenuState() {
     // Update environment animations even in menu
-    if (this.renderEngine && this.renderEngine.environmentBuilder) {
-      this.renderEngine.environmentBuilder.updateAnimations(this.deltaTime)
-    }
+    // Note: Environment animations are handled by the main update loop in main.js
     
     // Check for input to start game
     if (this.inputManager) {
@@ -230,9 +228,7 @@ export class GameEngine {
     }
     
     // Update environment animations
-    if (this.renderEngine && this.renderEngine.environmentBuilder) {
-      this.renderEngine.environmentBuilder.updateAnimations(this.deltaTime)
-    }
+    // Note: Environment animations are handled by the main update loop in main.js
     
     // Update player movement
     if (this.playerController && this.inputManager) {
@@ -272,9 +268,7 @@ export class GameEngine {
    */
   updateGameOverState() {
     // Update environment animations
-    if (this.renderEngine && this.renderEngine.environmentBuilder) {
-      this.renderEngine.environmentBuilder.updateAnimations(this.deltaTime)
-    }
+    // Note: Environment animations are handled by the main update loop in main.js
     
     // Keep souls and player visible but don't update gameplay
     if (this.soulManager) {

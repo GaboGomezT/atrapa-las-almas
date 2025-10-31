@@ -382,6 +382,62 @@ export class UIManager {
   }
 
   /**
+   * Update score (alias for updateScoreDisplay for GameEngine compatibility)
+   * @param {number} score - Current score value
+   */
+  updateScore(score) {
+    this.updateScoreDisplay(score)
+  }
+
+  /**
+   * Update timer (alias for updateTimerDisplay for GameEngine compatibility)
+   * @param {number} seconds - Remaining time in seconds
+   */
+  updateTimer(seconds) {
+    this.updateTimerDisplay(seconds)
+  }
+
+  /**
+   * Update game UI with current game state
+   * @param {Object} gameState - Current game state object
+   */
+  updateGameUI(gameState) {
+    if (gameState.score !== undefined) {
+      this.updateScoreDisplay(gameState.score)
+    }
+    if (gameState.timeRemaining !== undefined) {
+      this.updateTimerDisplay(gameState.timeRemaining)
+    }
+  }
+
+  /**
+   * Show game UI (called when game starts)
+   */
+  showGameUI() {
+    this.hideGameOverScreen()
+    this.isGameActive = true
+  }
+
+  /**
+   * Show game over UI
+   * @param {Object} gameState - Final game state
+   */
+  showGameOverUI(gameState) {
+    if (gameState.score !== undefined) {
+      this.currentScore = gameState.score
+    }
+    this.showGameOverScreen()
+  }
+
+  /**
+   * Show menu UI (placeholder for future menu implementation)
+   */
+  showMenuUI() {
+    this.hideGameOverScreen()
+    this.isGameActive = false
+  }
+
+  /**
    * Clean up resources and event listeners
    */
   dispose() {

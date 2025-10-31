@@ -5,7 +5,7 @@ import * as THREE from 'three'
  * Features translucent sphere geometry with glowing material and floating animation
  */
 export class Soul {
-  constructor(id, position = new THREE.Vector3()) {
+  constructor(id = null, position = new THREE.Vector3()) {
     this.id = id
     this.position = position.clone()
     this.initialPosition = position.clone()
@@ -31,6 +31,17 @@ export class Soul {
     this.isCollected = false
     this.collectionAnimation = 0
     
+    // Only create mesh if we have an ID (for object pooling compatibility)
+    if (this.id !== null) {
+      this.init()
+    }
+  }
+
+  /**
+   * Initialize the soul (create mesh and effects)
+   * This method is called by the object pool or constructor
+   */
+  init() {
     this.createSoulMesh()
     this.createParticleEffects()
   }
@@ -359,6 +370,72 @@ export class Soul {
    */
   getCollisionRadius() {
     return 0.6 // Slightly larger than visual radius for easier collection
+  }
+
+  /**
+   * Reset the soul to initial state (for object pooling)
+   */
+  reset() {
+    this.isCollected = false
+    this.collectionAnimation = 0
+    
+    // Reset animation properties with new random values
+    this.floatOffset = Math.random() * Math.PI * 2
+    this.floatSpeed = 0.8 + Math.random() * 0.4
+    this.floatRange = 0.3 + Math.random() * 0.2
+    this.rotationSpeed = 0.5 + Math.random() * 0.3
+    this.driftOffset = Math.random() * Math.PI * 2
+    this.driftSpeed = 0.3 + Math.random() * 0.2
+    this.driftRange = 0.8 + Math.random() * 0.4
+    this.glowIntensity = 0.7 + Math.random() * 0.3
+    this.pulseSpeed = 1.5 + Math.random() * 0.5
+    
+    // Reset mesh properties if mesh exists
+    if (this.mesh) {
+      this.mesh.scale.setScalar(1.0)
+      this.mesh.rotation.set(0, 0, 0)
+      
+      if (this.mesh.material) {
+        this.mesh.material.opacity = 0.7
+        this.mesh.material.emissiveIntensity = 0.3
+      }
+      
+      // Reset glow spheres
+      const innerGlow = this.mesh.getObjectByName('inner-glow')
+      const outerGlow = this.mesh.getObjectByName('outer-glow')
+      
+      if (innerGlow) {
+        innerGlow.material.opacity = 0.4
+        innerGlow.scale.setScalar(1.0)
+      }
+      
+      if (outerGlow) {
+        outerGlow.material.opacity = 0.15
+        outerGlow.scale.setScalar(1.0)
+      }
+      
+      // Reset particle system
+      if (this.particleSystem) {
+        this.particleSystem.material.opacity = 0.8
+        this.particleSystem.scale.setScalar(1.0)
+        this.particleSystem.rotation.set(0, 0, 0)
+      }
+    }
+  }
+
+  /**
+   * Set the position of the soul
+   * @param {number} x - X coordinate
+   * @param {number} y - Y coordinate  
+   * @param {number} z - Z coordinate
+   */
+  setPosition(x, y, z) {
+    this.position.set(x, y, z)
+    this.initialPosition.copy(this.position)
+    
+    if (this.mesh) {
+      this.mesh.position.copy(this.position)
+    }
   }
 
   /**

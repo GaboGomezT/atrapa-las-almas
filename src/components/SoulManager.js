@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { Soul } from './Soul.js'
+import { SoulPool } from '../utils/ObjectPool.js'
 
 /**
  * SoulManager handles spawning, lifecycle, and management of soul entities
@@ -12,7 +13,7 @@ export class SoulManager {
     
     // Soul management
     this.activeSouls = new Map() // Active souls in the game
-    this.soulPool = [] // Pool of reusable soul objects
+    this.soulPool = new SoulPool(Soul, renderEngine, 15) // Optimized object pool
     this.nextSoulId = 0
     
     // Spawning configuration
@@ -20,16 +21,13 @@ export class SoulManager {
     this.spawnRate = 2.0 // Souls per second
     this.spawnTimer = 0
     this.spawnInterval = 1.0 / this.spawnRate
+    this.isSpawningPaused = false
     
     // Game field boundaries
     this.fieldSize = { x: 10, z: 10 }
     this.spawnHeight = { min: 1.5, max: 4.0 }
     
-    // Performance tracking
-    this.poolHits = 0
-    this.poolMisses = 0
-    
-    console.log('SoulManager initialized')
+    console.log('SoulManager initialized with optimized object pooling')
   }
 
   /**
@@ -37,13 +35,15 @@ export class SoulManager {
    * @param {number} deltaTime - Time since last update in seconds
    */
   update(deltaTime) {
-    // Update spawn timer
-    this.spawnTimer += deltaTime
-    
-    // Spawn new souls if needed
-    if (this.spawnTimer >= this.spawnInterval && this.activeSouls.size < this.maxSouls) {
-      this.spawnSoul()
-      this.spawnTimer = 0
+    // Update spawn timer only if spawning is not paused
+    if (!this.isSpawningPaused) {
+      this.spawnTimer += deltaTime
+      
+      // Spawn new souls if needed
+      if (this.spawnTimer >= this.spawnInterval && this.activeSouls.size < this.maxSouls) {
+        this.spawnSoul()
+        this.spawnTimer = 0
+      }
     }
     
     // Update all active souls
@@ -69,61 +69,19 @@ export class SoulManager {
    * @returns {Soul|null} The spawned soul or null if spawn failed
    */
   spawnSoul() {
-    if (this.activeSouls.size >= this.maxSouls) {
+    if (this.activeSouls.size >= this.maxSouls || this.isSpawningPaused) {
       return null
     }
     
     // Generate random spawn position
     const position = this.generateSpawnPosition()
     
-    // Get soul from pool or create new one
-    let soul = this.getSoulFromPool()
+    // Get soul from optimized pool
+    const soul = this.soulPool.acquireSoul(position)
+    soul.id = `soul-${this.nextSoulId++}`
     
-    if (soul) {
-      // Reuse existing soul
-      soul.id = `soul-${this.nextSoulId++}`
-      soul.position.copy(position)
-      soul.initialPosition.copy(position)
-      soul.isCollected = false
-      soul.collectionAnimation = 0
-      
-      // Reset mesh properties
-      if (soul.mesh) {
-        soul.mesh.position.copy(position)
-        soul.mesh.scale.setScalar(1.0)
-        soul.mesh.material.opacity = 0.7
-        soul.mesh.material.emissiveIntensity = 0.3
-        
-        // Reset glow spheres
-        const innerGlow = soul.mesh.getObjectByName('inner-glow')
-        const outerGlow = soul.mesh.getObjectByName('outer-glow')
-        
-        if (innerGlow) {
-          innerGlow.material.opacity = 0.4
-        }
-        
-        if (outerGlow) {
-          outerGlow.material.opacity = 0.15
-          outerGlow.scale.setScalar(1.0)
-        }
-        
-        // Reset particle system
-        if (soul.particleSystem) {
-          soul.particleSystem.material.opacity = 0.8
-          soul.particleSystem.scale.setScalar(1.0)
-        }
-      }
-      
-      this.poolHits++
-    } else {
-      // Create new soul
-      soul = new Soul(`soul-${this.nextSoulId++}`, position)
-      this.poolMisses++
-    }
-    
-    // Add to active souls and scene
+    // Add to active souls tracking
     this.activeSouls.set(soul.getId(), soul)
-    this.scene.add(soul.getMesh())
     
     return soul
   }
@@ -141,26 +99,7 @@ export class SoulManager {
     return new THREE.Vector3(x, y, z)
   }
 
-  /**
-   * Get a soul from the object pool
-   * @returns {Soul|null} Reused soul or null if pool is empty
-   */
-  getSoulFromPool() {
-    if (this.soulPool.length > 0) {
-      return this.soulPool.pop()
-    }
-    return null
-  }
 
-  /**
-   * Return a soul to the object pool
-   * @param {Soul} soul - Soul to return to pool
-   */
-  returnSoulToPool(soul) {
-    if (soul && this.soulPool.length < 20) { // Limit pool size
-      this.soulPool.push(soul)
-    }
-  }
 
   /**
    * Remove a soul from the game
@@ -170,16 +109,11 @@ export class SoulManager {
     const soul = this.activeSouls.get(soulId)
     if (!soul) return
     
-    // Remove from scene
-    if (soul.getMesh()) {
-      this.scene.remove(soul.getMesh())
-    }
-    
-    // Remove from active souls
+    // Remove from active souls tracking
     this.activeSouls.delete(soulId)
     
-    // Return to pool for reuse
-    this.returnSoulToPool(soul)
+    // Return to optimized pool (handles scene removal automatically)
+    this.soulPool.releaseSoul(soul)
   }
 
   /**
@@ -293,12 +227,9 @@ export class SoulManager {
    * Clear all souls from the game
    */
   clearAllSouls() {
-    // Remove all souls from scene and return to pool
+    // Return all souls to pool (handles scene removal automatically)
     for (const [id, soul] of this.activeSouls) {
-      if (soul.getMesh()) {
-        this.scene.remove(soul.getMesh())
-      }
-      this.returnSoulToPool(soul)
+      this.soulPool.releaseSoul(soul)
     }
     
     this.activeSouls.clear()
@@ -320,33 +251,24 @@ export class SoulManager {
    * @returns {Object} Performance stats
    */
   getPerformanceStats() {
-    const totalRequests = this.poolHits + this.poolMisses
-    const hitRate = totalRequests > 0 ? (this.poolHits / totalRequests) * 100 : 0
+    const poolStats = this.soulPool.getStats()
     
     return {
       activeSouls: this.activeSouls.size,
-      poolSize: this.soulPool.length,
-      poolHits: this.poolHits,
-      poolMisses: this.poolMisses,
-      hitRate: hitRate.toFixed(1) + '%',
+      poolSize: poolStats.poolSize,
+      totalPoolObjects: poolStats.totalObjects,
+      activePoolObjects: poolStats.activeObjects,
       maxSouls: this.maxSouls,
-      spawnRate: this.spawnRate
+      spawnRate: this.spawnRate,
+      isSpawningPaused: this.isSpawningPaused
     }
-  }
-
-  /**
-   * Reset performance counters
-   */
-  resetPerformanceStats() {
-    this.poolHits = 0
-    this.poolMisses = 0
   }
 
   /**
    * Pause soul spawning
    */
   pauseSpawning() {
-    this.spawnRate = 0
+    this.isSpawningPaused = true
   }
 
   /**
@@ -354,11 +276,9 @@ export class SoulManager {
    * @param {number} spawnRate - Souls per second (optional, uses previous rate if not provided)
    */
   resumeSpawning(spawnRate = null) {
+    this.isSpawningPaused = false
     if (spawnRate !== null) {
       this.setSpawnRate(spawnRate)
-    } else if (this.spawnRate === 0) {
-      this.spawnRate = 2.0 // Default spawn rate
-      this.spawnInterval = 1.0 / this.spawnRate
     }
   }
 
@@ -369,14 +289,13 @@ export class SoulManager {
     // Clear all active souls
     this.clearAllSouls()
     
-    // Dispose of pooled souls
-    for (const soul of this.soulPool) {
-      soul.dispose()
+    // Dispose of optimized pool
+    if (this.soulPool) {
+      this.soulPool.dispose()
+      this.soulPool = null
     }
-    this.soulPool.length = 0
     
     // Reset counters
-    this.resetPerformanceStats()
     this.nextSoulId = 0
     
     console.log('SoulManager disposed')

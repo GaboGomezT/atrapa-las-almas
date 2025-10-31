@@ -91,8 +91,40 @@ export class RenderEngine {
     // Add resize event listener
     window.addEventListener('resize', this.handleResize, false)
     
+    // Add WebGL context lost/restored handlers
+    this.canvas.addEventListener('webglcontextlost', this.handleContextLost.bind(this), false)
+    this.canvas.addEventListener('webglcontextrestored', this.handleContextRestored.bind(this), false)
+    
     // Initial resize to ensure proper sizing
     this.handleResize()
+  }
+
+  /**
+   * Handle WebGL context lost event
+   */
+  handleContextLost(event) {
+    console.warn('WebGL context lost')
+    event.preventDefault()
+    this.stopRenderLoop()
+  }
+
+  /**
+   * Handle WebGL context restored event
+   */
+  handleContextRestored(event) {
+    console.log('WebGL context restored, reinitializing...')
+    
+    try {
+      // Reinitialize renderer
+      this.initRenderer()
+      
+      // Restart render loop
+      this.startRenderLoop()
+      
+      console.log('WebGL context successfully restored')
+    } catch (error) {
+      console.error('Failed to restore WebGL context:', error)
+    }
   }
 
   /**

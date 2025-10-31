@@ -15,7 +15,17 @@ html, body {
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior: none;
+  /* Prevent zoom on double tap */
+  touch-action: manipulation;
+  /* Improve font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #app {
@@ -36,6 +46,19 @@ html, body {
   width: 100%;
   height: 100%;
   background: #000;
+  /* Prevent context menu on right click */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  /* Prevent image dragging */
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
 }
 
 /* UI Overlay */
@@ -508,5 +531,155 @@ body.mobile-controls-active .mobile-only {
   
   .virtual-joystick-knob {
     border-width: 1px;
+  }
+}
+/* Browser
+-specific optimizations and fixes */
+
+/* Safari-specific fixes */
+@supports (-webkit-appearance: none) {
+  /* Fix for Safari's aggressive caching */
+  #game-canvas {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+  
+  /* Improve performance on iOS */
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix for Safari's viewport units on mobile */
+  #app {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+}
+
+/* Firefox-specific optimizations */
+@-moz-document url-prefix() {
+  /* Improve font rendering in Firefox */
+  body {
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Fix for Firefox's canvas rendering */
+  #game-canvas {
+    image-rendering: -moz-crisp-edges;
+  }
+}
+
+/* Edge/IE specific fixes */
+@supports (-ms-ime-align: auto) {
+  /* Fix for older Edge versions */
+  #game-canvas {
+    -ms-touch-action: none;
+  }
+}
+
+/* Chrome-specific optimizations */
+@supports (background: -webkit-named-image(i)) {
+  /* Improve performance in Chrome */
+  #game-canvas {
+    will-change: transform;
+  }
+}
+
+/* Prevent zoom on input focus (iOS Safari) */
+input, select, textarea, button {
+  font-size: 16px !important;
+}
+
+/* Fix for iOS Safari bottom bar */
+@supports (padding: max(0px)) {
+  #app {
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+  
+  #touch-controls {
+    bottom: max(20px, calc(20px + env(safe-area-inset-bottom)));
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .loading-spinner {
+    animation: none;
+  }
+  
+  .btn-primary:hover {
+    transform: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .ui-element {
+    border-width: 3px;
+    background: rgba(0, 0, 0, 0.9);
+  }
+  
+  .btn-primary {
+    border: 2px solid #fff;
+  }
+  
+  #virtual-joystick {
+    border-width: 4px;
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Dark mode support (if system preference) */
+@media (prefers-color-scheme: dark) {
+  /* Game already uses dark theme, but ensure consistency */
+  .modal-content {
+    background: linear-gradient(135deg, #1a0d2e 0%, #16213e 100%);
+    border-color: #ff6b35;
+  }
+}
+
+/* Print styles (hide game elements) */
+@media print {
+  #app {
+    display: none;
+  }
+}
+
+/* Focus styles for accessibility */
+.btn-primary:focus,
+#virtual-joystick:focus {
+  outline: 2px solid #ffaa00;
+  outline-offset: 2px;
+}
+
+/* Ensure proper stacking context */
+#game-container {
+  isolation: isolate;
+}
+
+#ui-overlay {
+  isolation: isolate;
+}
+
+/* Performance optimizations */
+.ui-element,
+.modal,
+#virtual-joystick {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Fix for some Android browsers */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  #game-canvas {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
 }

@@ -400,6 +400,14 @@ export class InputManager {
   }
 
   /**
+   * Check if restart key is pressed (for GameEngine compatibility)
+   * @returns {boolean} True if restart key is pressed
+   */
+  isRestartPressed() {
+    return this.keys['KeyR'] || this.keys['Enter'] || this.keys['Space']
+  }
+
+  /**
    * Clean up event listeners and DOM elements
    */
   dispose() {
