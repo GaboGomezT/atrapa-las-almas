@@ -8,7 +8,7 @@
   - Add network availability checking
   - _Requirements: 2.1, 3.1, 3.3, 5.1, 5.4_
 
-- [ ] 2. Create LeaderboardManager to orchestrate the flow
+- [x] 2. Create LeaderboardManager to orchestrate the flow
   - Create LeaderboardManager class with APIService integration
   - Implement handleGameEnd() method to start leaderboard flow
   - Implement submitScore() method to handle score submission
