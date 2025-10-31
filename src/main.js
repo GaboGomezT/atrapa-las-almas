@@ -10,6 +10,7 @@ import { CollisionDetector } from './components/CollisionDetector.js'
 import { UIManager } from './components/UIManager.js'
 import { TouchControlManager } from './components/TouchControlManager.js'
 import { AssetLoader } from './utils/AssetLoader.js'
+import { SoundManager } from './utils/SoundManager.js'
 
 // Global game instances
 let renderEngine = null
@@ -22,6 +23,7 @@ let collisionDetector = null
 let uiManager = null
 let touchControlManager = null
 let assetLoader = null
+let soundManager = null
 
 // Game state
 let isGameInitialized = false
@@ -123,6 +125,9 @@ async function initGame() {
       updateLoadingProgress(progress, `Cargando recursos... (${loaded}/${total})`)
     })
 
+    // Initialize sound manager
+    soundManager = new SoundManager()
+
     // Initialize UI manager (required for error display)
     uiManager = new UIManager()
     if (!uiManager.init()) {
@@ -168,7 +173,8 @@ async function initGame() {
       soulManager,
       collisionDetector,
       inputManager,
-      uiManager
+      uiManager,
+      soundManager
     })
 
     // Set up UI restart callback to work with GameEngine
@@ -450,6 +456,11 @@ function cleanup() {
       assetLoader.dispose()
       assetLoader = null
     }
+    
+    if (soundManager) {
+      soundManager.dispose()
+      soundManager = null
+    }
 
     isGameInitialized = false
     console.log('Recursos del juego limpiados correctamente')
@@ -499,6 +510,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     displayError(error)
   }
 })
+
+// Handle first user interaction to enable audio
+function enableAudioOnFirstInteraction() {
+  if (soundManager) {
+    soundManager.resumeAudioContext()
+  }
+  
+  // Remove listeners after first interaction
+  document.removeEventListener('click', enableAudioOnFirstInteraction)
+  document.removeEventListener('keydown', enableAudioOnFirstInteraction)
+  document.removeEventListener('touchstart', enableAudioOnFirstInteraction)
+}
+
+// Add listeners for first user interaction
+document.addEventListener('click', enableAudioOnFirstInteraction)
+document.addEventListener('keydown', enableAudioOnFirstInteraction)
+document.addEventListener('touchstart', enableAudioOnFirstInteraction)
 
 // Handle page visibility changes (pause/resume game)
 document.addEventListener('visibilitychange', () => {

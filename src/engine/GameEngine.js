@@ -29,6 +29,7 @@ export class GameEngine {
     this.collisionDetector = null
     this.inputManager = null
     this.uiManager = null
+    this.soundManager = null
     
     // Game timing
     this.lastTime = 0
@@ -76,6 +77,7 @@ export class GameEngine {
     this.collisionDetector = systems.collisionDetector
     this.inputManager = systems.inputManager
     this.uiManager = systems.uiManager
+    this.soundManager = systems.soundManager
     
     // Validate required systems
     this.validateSystems()
@@ -289,6 +291,11 @@ export class GameEngine {
   startGame() {
     console.log('Starting new game session')
     
+    // Play game start sound
+    if (this.soundManager) {
+      this.soundManager.playGameStart()
+    }
+    
     // Change state to playing
     this.changeState('playing')
     
@@ -321,6 +328,11 @@ export class GameEngine {
    */
   endGame() {
     console.log(`Ending game session - Final Score: ${this.score}`)
+    
+    // Play game over sound
+    if (this.soundManager) {
+      this.soundManager.playGameOver()
+    }
     
     // Stop the timer
     this.stopTimer()
@@ -446,6 +458,11 @@ export class GameEngine {
   handleSoulCollection(collisionData) {
     // Only count souls collected during gameplay
     if (this.currentState !== 'playing') return
+    
+    // Play collection sound effect
+    if (this.soundManager) {
+      this.soundManager.playSoulCollected()
+    }
     
     // Increment score
     this.incrementScore()
@@ -578,8 +595,22 @@ export class GameEngine {
    */
   updateTimer() {
     if (this.currentState === 'playing') {
+      const previousTime = this.timeRemaining
+      
       // Calculate time remaining based on game time
       this.timeRemaining = Math.max(0, this.config.GAME_DURATION - this.gameTime)
+      
+      // Play countdown sounds
+      if (this.soundManager) {
+        // Warning sound for last 10 seconds
+        if (this.timeRemaining <= 10 && previousTime > 10) {
+          this.soundManager.playCountdownWarning()
+        }
+        // Tick sound for last 5 seconds
+        else if (this.timeRemaining <= 5 && Math.floor(this.timeRemaining) !== Math.floor(previousTime)) {
+          this.soundManager.playCountdownTick()
+        }
+      }
       
       // Check if time is up
       if (this.timeRemaining <= 0) {
@@ -703,6 +734,7 @@ export class GameEngine {
     this.collisionDetector = null
     this.inputManager = null
     this.uiManager = null
+    this.soundManager = null
     
     // Reset state
     this.currentState = 'menu'
