@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Daily Leaderboard Reset",
+  "description": "Automatically restarts the top 10 leaderboard every 24 hours to maintain fresh competition and give all players equal opportunities",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/engine/LeaderboardManager.js"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "The leaderboard system needs to be updated to automatically reset the top 10 scores every 24 hours. Please implement a daily reset mechanism that clears the current leaderboard and starts fresh competition. This should include proper scheduling, data persistence of reset timestamps, and user notification of the reset. Consider timezone handling and ensure the reset happens at a consistent time globally."
+  }
+}

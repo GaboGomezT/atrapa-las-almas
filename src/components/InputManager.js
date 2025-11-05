@@ -124,12 +124,61 @@ export class InputManager {
   }
 
   /**
+   * Check if a touch target is an interactive UI element
+   * @param {EventTarget} target - The touch event target
+   * @returns {boolean} True if target is an interactive element
+   */
+  isInteractiveElement(target) {
+    if (!target) return false
+    
+    // Check if target is an input, button, textarea, select, or has contentEditable
+    const tagName = target.tagName?.toLowerCase()
+    const interactiveTags = ['input', 'button', 'textarea', 'select', 'a']
+    
+    if (interactiveTags.includes(tagName)) {
+      return true
+    }
+    
+    // Check if element is contentEditable
+    if (target.contentEditable === 'true') {
+      return true
+    }
+    
+    // Check if element is inside a modal or has a role that makes it interactive
+    let element = target
+    while (element && element !== document.body) {
+      if (element.classList?.contains('modal') || 
+          element.classList?.contains('modal-content') ||
+          element.closest('.modal')) {
+        return true
+      }
+      if (element.getAttribute('role') === 'button' || 
+          element.getAttribute('role') === 'textbox') {
+        return true
+      }
+      element = element.parentElement
+    }
+    
+    return false
+  }
+
+  /**
    * Handle touch start events
    * @param {TouchEvent} event - Touch event
    */
   handleTouchStart(event) {
     if (!this.touchControlsEnabled) {
       return // Don't handle touch events when disabled - allow default behavior
+    }
+    
+    // Check if touch is on an interactive element (input, button, etc.)
+    if (event.touches.length > 0) {
+      const touch = event.touches[0]
+      const target = touch.target || event.target
+      
+      if (this.isInteractiveElement(target)) {
+        return // Don't interfere with interactive elements
+      }
     }
     
     event.preventDefault()
@@ -156,6 +205,23 @@ export class InputManager {
       return // Don't handle touch events when disabled - allow default behavior
     }
     
+    // Check if touch is on an interactive element
+    if (event.touches.length > 0) {
+      const touch = event.touches[0]
+      const target = touch.target || event.target
+      
+      if (this.isInteractiveElement(target)) {
+        // Cancel active touch if it moves over an interactive element
+        if (this.touchActive) {
+          this.touchActive = false
+          this.inputVector.x = 0
+          this.inputVector.z = 0
+          this.hideVirtualJoystick()
+        }
+        return // Don't interfere with interactive elements
+      }
+    }
+    
     event.preventDefault()
     
     if (this.touchActive && event.touches.length > 0) {
@@ -175,6 +241,16 @@ export class InputManager {
   handleTouchEnd(event) {
     if (!this.touchControlsEnabled) {
       return // Don't handle touch events when disabled - allow default behavior
+    }
+    
+    // Check if touch is on an interactive element
+    if (event.changedTouches && event.changedTouches.length > 0) {
+      const touch = event.changedTouches[0]
+      const target = touch.target || event.target
+      
+      if (this.isInteractiveElement(target)) {
+        return // Don't interfere with interactive elements
+      }
     }
     
     event.preventDefault()
@@ -417,6 +493,8 @@ export class InputManager {
     document.removeEventListener('touchstart', this.boundTouchStart)
     document.removeEventListener('touchmove', this.boundTouchMove)
     document.removeEventListener('touchend', this.boundTouchEnd)
+    
+    console.log('InputManager: Touch controls disabled')
   }
 
   /**
@@ -429,6 +507,8 @@ export class InputManager {
     document.addEventListener('touchstart', this.boundTouchStart, { passive: false })
     document.addEventListener('touchmove', this.boundTouchMove, { passive: false })
     document.addEventListener('touchend', this.boundTouchEnd, { passive: false })
+    
+    console.log('InputManager: Touch controls enabled')
   }
 
   /**

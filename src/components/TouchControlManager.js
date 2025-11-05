@@ -171,6 +171,45 @@ export class TouchControlManager {
   }
 
   /**
+   * Check if a touch target is an interactive UI element
+   * @param {EventTarget} target - The touch event target
+   * @returns {boolean} True if target is an interactive element
+   */
+  isInteractiveElement(target) {
+    if (!target) return false
+    
+    // Check if target is an input, button, textarea, select, or has contentEditable
+    const tagName = target.tagName?.toLowerCase()
+    const interactiveTags = ['input', 'button', 'textarea', 'select', 'a']
+    
+    if (interactiveTags.includes(tagName)) {
+      return true
+    }
+    
+    // Check if element is contentEditable
+    if (target.contentEditable === 'true') {
+      return true
+    }
+    
+    // Check if element is inside a modal or has a role that makes it interactive
+    let element = target
+    while (element && element !== document.body) {
+      if (element.classList?.contains('modal') || 
+          element.classList?.contains('modal-content') ||
+          element.closest('.modal')) {
+        return true
+      }
+      if (element.getAttribute('role') === 'button' || 
+          element.getAttribute('role') === 'textbox') {
+        return true
+      }
+      element = element.parentElement
+    }
+    
+    return false
+  }
+
+  /**
    * Handle touch start event
    * @param {TouchEvent} e - Touch event
    */
@@ -179,11 +218,20 @@ export class TouchControlManager {
       return // Don't handle touch events when disabled - allow default behavior
     }
     
-    e.preventDefault()
-    
+    // Check if touch is on an interactive element (input, button, etc.)
     if (e.touches.length > 0) {
       const touch = e.touches[0]
-      this.startTouch(touch.identifier, touch.clientX, touch.clientY)
+      const target = touch.target || e.target
+      
+      if (this.isInteractiveElement(target)) {
+        return // Don't interfere with interactive elements
+      }
+      
+      // Only handle touches on the virtual joystick element
+      if (this.virtualJoystick && this.virtualJoystick.contains(target)) {
+        e.preventDefault()
+        this.startTouch(touch.identifier, touch.clientX, touch.clientY)
+      }
     }
   }
 
@@ -196,7 +244,25 @@ export class TouchControlManager {
       return // Don't handle touch events when disabled - allow default behavior
     }
     
-    e.preventDefault()
+    // Check if touch is on an interactive element
+    if (e.touches.length > 0) {
+      const touch = e.touches[0]
+      const target = touch.target || e.target
+      
+      if (this.isInteractiveElement(target)) {
+        // Cancel active joystick touch if it moves over an interactive element
+        if (touch.identifier === this.touchId) {
+          this.endTouch()
+        }
+        return // Don't interfere with interactive elements
+      }
+      
+      // Only prevent default if we're actively controlling the joystick
+      // and the touch is still on the joystick area
+      if (this.virtualJoystick && this.virtualJoystick.contains(target)) {
+        e.preventDefault()
+      }
+    }
     
     for (let i = 0; i < e.touches.length; i++) {
       const touch = e.touches[i]
@@ -214,6 +280,16 @@ export class TouchControlManager {
   handleTouchEnd(e) {
     if (!this.controlsEnabled || !this.isActive) {
       return // Don't handle touch events when disabled - allow default behavior
+    }
+    
+    // Check if touch is on an interactive element
+    if (e.changedTouches && e.changedTouches.length > 0) {
+      const touch = e.changedTouches[0]
+      const target = touch.target || e.target
+      
+      if (this.isInteractiveElement(target)) {
+        return // Don't interfere with interactive elements
+      }
     }
     
     // Check if our touch ended
@@ -418,6 +494,8 @@ export class TouchControlManager {
     if (this.boundTouchEnd) {
       document.addEventListener('touchend', this.boundTouchEnd, { passive: false })
     }
+    
+    console.log('TouchControlManager: Controls enabled')
   }
 
   /**
@@ -438,6 +516,8 @@ export class TouchControlManager {
     if (this.boundTouchEnd) {
       document.removeEventListener('touchend', this.boundTouchEnd)
     }
+    
+    console.log('TouchControlManager: Controls disabled')
   }
 
   /**
