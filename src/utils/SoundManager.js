@@ -36,7 +36,11 @@ export class SoundManager {
    * Resume audio context if it's suspended (required for user interaction)
    */
   async resumeAudioContext() {
-    if (this.audioContext && this.audioContext.state === 'suspended') {
+    if (!this.audioContext) return
+    
+    // Always try to resume, even if state is not 'suspended'
+    // Some mobile browsers need explicit resume even when state appears 'running'
+    if (this.audioContext.state === 'suspended' || this.audioContext.state === 'interrupted') {
       try {
         await this.audioContext.resume()
         console.log('Audio context resumed')
@@ -44,15 +48,25 @@ export class SoundManager {
         console.warn('Failed to resume audio context:', error)
       }
     }
+    
+    // Ensure audio context is running
+    if (this.audioContext.state !== 'running') {
+      try {
+        await this.audioContext.resume()
+        console.log('Audio context forced to running state')
+      } catch (error) {
+        console.warn('Failed to force audio context to running:', error)
+      }
+    }
   }
 
   /**
    * Play soul collection sound effect
    */
-  playSoulCollected() {
+  async playSoulCollected() {
     if (!this.isEnabled || !this.audioContext) return
     
-    this.resumeAudioContext()
+    await this.resumeAudioContext()
     
     const now = this.audioContext.currentTime
     
@@ -101,10 +115,10 @@ export class SoundManager {
   /**
    * Play game start sound effect
    */
-  playGameStart() {
+  async playGameStart() {
     if (!this.isEnabled || !this.audioContext) return
     
-    this.resumeAudioContext()
+    await this.resumeAudioContext()
     
     const now = this.audioContext.currentTime
     
@@ -136,10 +150,10 @@ export class SoundManager {
   /**
    * Play game over sound effect
    */
-  playGameOver() {
+  async playGameOver() {
     if (!this.isEnabled || !this.audioContext) return
     
-    this.resumeAudioContext()
+    await this.resumeAudioContext()
     
     const now = this.audioContext.currentTime
     
@@ -167,10 +181,10 @@ export class SoundManager {
   /**
    * Play countdown tick sound
    */
-  playCountdownTick() {
+  async playCountdownTick() {
     if (!this.isEnabled || !this.audioContext) return
     
-    this.resumeAudioContext()
+    await this.resumeAudioContext()
     
     const now = this.audioContext.currentTime
     
@@ -195,10 +209,10 @@ export class SoundManager {
   /**
    * Play final countdown warning sound (last 10 seconds)
    */
-  playCountdownWarning() {
+  async playCountdownWarning() {
     if (!this.isEnabled || !this.audioContext) return
     
-    this.resumeAudioContext()
+    await this.resumeAudioContext()
     
     const now = this.audioContext.currentTime
     
@@ -225,10 +239,10 @@ export class SoundManager {
   /**
    * Play ambient background tone (subtle)
    */
-  playAmbientTone() {
+  async playAmbientTone() {
     if (!this.isEnabled || !this.audioContext) return
     
-    this.resumeAudioContext()
+    await this.resumeAudioContext()
     
     const now = this.audioContext.currentTime
     

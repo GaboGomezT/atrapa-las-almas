@@ -332,11 +332,12 @@ export class GameEngine {
   /**
    * Start a new game session
    */
-  startGame() {
+  async startGame() {
     console.log('Starting new game session')
     
-    // Play game start sound
+    // Ensure audio context is resumed before playing sounds (mobile requirement)
     if (this.soundManager) {
+      await this.soundManager.resumeAudioContext()
       this.soundManager.playGameStart()
     }
     

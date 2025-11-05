@@ -623,9 +623,21 @@ body.mobile-controls-active .mobile-only {
 
 .loading-content h1 {
   color: #ff6b35;
-  font-size: 3rem;
-  margin-bottom: 30px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  font-size: 3.5rem;
+  margin-bottom: 40px;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 107, 53, 0.5);
+  font-weight: 700;
+  letter-spacing: 2px;
+  animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% {
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 107, 53, 0.5);
+  }
+  50% {
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 107, 53, 0.8);
+  }
 }
 
 .loading-spinner {
@@ -652,6 +664,97 @@ body.mobile-controls-active .mobile-only {
 .loading-content p {
   color: #ffaa00;
   font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.game-description {
+  max-width: 650px;
+  margin: 30px auto;
+  text-align: center;
+  padding: 0 20px;
+}
+
+.game-description.hidden {
+  display: none;
+}
+
+.description-text {
+  color: #fff;
+  font-size: 1.15rem;
+  line-height: 1.8;
+  margin-bottom: 35px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 170, 0, 0.05) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 170, 0, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.controls-hint {
+  color: #ffd700;
+  font-size: 1rem;
+  margin-top: 25px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, rgba(255, 170, 0, 0.15) 0%, rgba(255, 107, 53, 0.15) 100%);
+  border-radius: 10px;
+  border: 2px solid rgba(255, 170, 0, 0.4);
+  line-height: 1.6;
+  box-shadow: 0 4px 15px rgba(255, 170, 0, 0.2);
+  font-weight: 500;
+}
+
+.desktop-hint,
+.mobile-hint {
+  display: block;
+  margin: 5px 0;
+}
+
+/* Show only relevant hint based on device */
+.desktop-hint {
+  display: none;
+}
+
+.mobile-hint {
+  display: block;
+}
+
+@media (min-width: 769px) {
+  .desktop-hint {
+    display: block;
+  }
+  
+  .mobile-hint {
+    display: none;
+  }
+}
+
+.start-button {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 18px 50px;
+  font-size: 1.6rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+  transition: all 0.3s ease;
+}
+
+.start-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.5);
+}
+
+.start-button:active {
+  transform: translateY(0);
+}
+
+.start-button.hidden {
+  display: none;
 }
 
 /* Responsive Design */
@@ -685,6 +788,35 @@ body.mobile-controls-active .mobile-only {
   
   .loading-content h1 {
     font-size: 2rem;
+  }
+  
+  .game-description {
+    margin: 20px auto;
+    padding: 0 15px;
+  }
+  
+  .description-text {
+    font-size: 1rem;
+    line-height: 1.7;
+    padding: 15px;
+  }
+  
+  .controls-hint {
+    font-size: 0.9rem;
+    padding: 15px;
+    line-height: 1.5;
+  }
+  
+  .start-button {
+    font-size: 1.3rem;
+    padding: 15px 35px;
+    margin-top: 20px;
+    letter-spacing: 0.5px;
+  }
+  
+  .loading-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
   }
 }
 

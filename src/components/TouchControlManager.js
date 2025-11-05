@@ -3,10 +3,11 @@
  * Provides touch-friendly interface for mobile devices
  */
 export class TouchControlManager {
-  constructor() {
+  constructor(soundManager = null) {
     this.virtualJoystick = null
     this.joystickKnob = null
     this.touchControls = null
+    this.soundManager = soundManager
 
     // Touch state
     this.isActive = false
@@ -26,6 +27,9 @@ export class TouchControlManager {
 
     // Control state
     this.controlsEnabled = true
+    
+    // Audio enablement flag
+    this.audioEnabled = false
 
     // Store event handler references for proper cleanup
     this.boundTouchStart = null
@@ -36,6 +40,25 @@ export class TouchControlManager {
     this.boundMouseEnd = null
     this.boundOrientationChange = null
     this.boundResize = null
+  }
+  
+  /**
+   * Set sound manager reference
+   * @param {SoundManager} soundManager - Sound manager instance
+   */
+  setSoundManager(soundManager) {
+    this.soundManager = soundManager
+  }
+  
+  /**
+   * Enable audio on first touch interaction
+   */
+  async enableAudioOnTouch() {
+    if (!this.audioEnabled && this.soundManager) {
+      await this.soundManager.resumeAudioContext()
+      this.audioEnabled = true
+      console.log('Audio enabled via touch interaction')
+    }
   }
 
   /**
@@ -214,6 +237,9 @@ export class TouchControlManager {
    * @param {TouchEvent} e - Touch event
    */
   handleTouchStart(e) {
+    // Enable audio on first touch (for mobile audio context)
+    this.enableAudioOnTouch()
+    
     if (!this.controlsEnabled) {
       return // Don't handle touch events when disabled - allow default behavior
     }

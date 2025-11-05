@@ -33,6 +33,42 @@ let leaderboardManager = null
 let isGameInitialized = false
 let initializationError = null
 
+// Track if audio has been enabled to avoid redundant calls
+let audioEnabled = false
+
+// Handle first user interaction to enable audio
+async function enableAudioOnFirstInteraction(event) {
+  if (audioEnabled || !soundManager) return
+  
+  try {
+    await soundManager.resumeAudioContext()
+    audioEnabled = true
+    console.log('Audio enabled on first interaction:', event?.type || 'unknown')
+    
+    // Remove all listeners after successful enablement
+    document.removeEventListener('click', enableAudioOnFirstInteraction)
+    document.removeEventListener('keydown', enableAudioOnFirstInteraction)
+    document.removeEventListener('touchstart', enableAudioOnFirstInteraction)
+    document.removeEventListener('touchend', enableAudioOnFirstInteraction)
+    
+    // Also remove from canvas and game container if they exist
+    const canvas = document.getElementById('game-canvas')
+    const gameContainer = document.getElementById('game-container')
+    if (canvas) {
+      canvas.removeEventListener('touchstart', enableAudioOnFirstInteraction)
+      canvas.removeEventListener('touchend', enableAudioOnFirstInteraction)
+    }
+    if (gameContainer) {
+      gameContainer.removeEventListener('touchstart', enableAudioOnFirstInteraction)
+      gameContainer.removeEventListener('touchend', enableAudioOnFirstInteraction)
+    }
+    document.body.removeEventListener('touchstart', enableAudioOnFirstInteraction)
+    document.body.removeEventListener('touchend', enableAudioOnFirstInteraction)
+  } catch (error) {
+    console.warn('Failed to enable audio:', error)
+  }
+}
+
 /**
  * Check WebGL support and browser compatibility
  */
@@ -149,8 +185,25 @@ async function initGame() {
     await assetLoader.loadEssentialAssets()
 
     // Initialize touch controls for mobile
-    touchControlManager = new TouchControlManager()
+    touchControlManager = new TouchControlManager(soundManager)
     touchControlManager.init()
+    
+    // Set up audio resume on canvas touch for mobile devices
+    // Use capture phase to ensure this runs before other handlers
+    if (browserCheck.capabilities.isMobile || browserCheck.capabilities.hasTouch) {
+      // Add touch listeners to canvas and game container with capture phase
+      const gameContainer = document.getElementById('game-container')
+      if (gameContainer) {
+        gameContainer.addEventListener('touchstart', enableAudioOnFirstInteraction, { once: true, passive: true, capture: true })
+        gameContainer.addEventListener('touchend', enableAudioOnFirstInteraction, { once: true, passive: true, capture: true })
+      }
+      canvas.addEventListener('touchstart', enableAudioOnFirstInteraction, { once: true, passive: true, capture: true })
+      canvas.addEventListener('touchend', enableAudioOnFirstInteraction, { once: true, passive: true, capture: true })
+      
+      // Also add to body for any touch anywhere (capture phase to catch early)
+      document.body.addEventListener('touchstart', enableAudioOnFirstInteraction, { once: true, passive: true, capture: true })
+      document.body.addEventListener('touchend', enableAudioOnFirstInteraction, { once: true, passive: true, capture: true })
+    }
     
     // Set touch control manager reference in UI manager
     if (uiManager && touchControlManager) {
@@ -229,13 +282,9 @@ async function initGame() {
     // Start the game engine loop
     gameEngine.startGameLoop()
 
-    // Start the first game after a brief delay
-    setTimeout(() => {
-      if (gameEngine) {
-        updateLoadingProgress(100, 'Listo para jugar!')
-        gameEngine.startGame()
-      }
-    }, 1000)
+    // Show start button instead of auto-starting
+    updateLoadingProgress(100, 'Listo para jugar!')
+    showStartButton()
 
     isGameInitialized = true
     console.log('Atrapa las Almas - Sistemas del juego inicializados correctamente')
@@ -403,11 +452,70 @@ function updateLoadingProgress(percentage, message = 'Cargando...') {
   if (loadingScreen) {
     const loadingContent = loadingScreen.querySelector('.loading-content')
     if (loadingContent) {
-      const progressText = loadingContent.querySelector('p')
+      const progressText = document.getElementById('loading-text')
       if (progressText) {
         progressText.textContent = `${message} (${Math.round(percentage)}%)`
       }
     }
+  }
+}
+
+/**
+ * Show start button and hide loading spinner
+ */
+function showStartButton() {
+  const loadingScreen = document.getElementById('loading-screen')
+  if (loadingScreen) {
+    const loadingContent = loadingScreen.querySelector('.loading-content')
+    if (loadingContent) {
+      const spinner = loadingContent.querySelector('.loading-spinner')
+      const loadingText = document.getElementById('loading-text')
+      const gameDescription = document.getElementById('game-description')
+      const startButton = document.getElementById('start-game-button')
+      
+      if (spinner) {
+        spinner.style.display = 'none'
+      }
+      
+      if (loadingText) {
+        loadingText.style.display = 'none'
+      }
+      
+      if (gameDescription) {
+        gameDescription.classList.remove('hidden')
+      }
+      
+      if (startButton) {
+        startButton.classList.remove('hidden')
+      }
+    }
+  }
+}
+
+/**
+ * Start the game when user clicks the start button
+ */
+async function startGameOnUserClick() {
+  // Enable audio first (required for mobile)
+  if (soundManager) {
+    await soundManager.resumeAudioContext()
+    console.log('Audio enabled via start button')
+  }
+  
+  // Hide loading screen
+  const loadingScreen = document.getElementById('loading-screen')
+  if (loadingScreen) {
+    loadingScreen.style.transition = 'opacity 0.5s ease'
+    loadingScreen.style.opacity = '0'
+    
+    setTimeout(() => {
+      loadingScreen.style.display = 'none'
+    }, 500)
+  }
+  
+  // Start the game
+  if (gameEngine) {
+    await gameEngine.startGame()
   }
 }
 
@@ -534,17 +642,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Start main update loop
       requestAnimationFrame(update)
       
-      // Hide loading screen with fade effect
-      setTimeout(() => {
-        if (loadingScreen) {
-          loadingScreen.style.transition = 'opacity 0.5s ease'
-          loadingScreen.style.opacity = '0'
-          
-          setTimeout(() => {
-            loadingScreen.style.display = 'none'
-          }, 500)
-        }
-      }, 1500)
+      // Set up start button handler
+      const startButton = document.getElementById('start-game-button')
+      if (startButton) {
+        startButton.addEventListener('click', startGameOnUserClick)
+      }
       
       console.log('Aplicación inicializada correctamente')
       
@@ -559,22 +661,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 })
 
-// Handle first user interaction to enable audio
-function enableAudioOnFirstInteraction() {
-  if (soundManager) {
-    soundManager.resumeAudioContext()
-  }
-  
-  // Remove listeners after first interaction
-  document.removeEventListener('click', enableAudioOnFirstInteraction)
-  document.removeEventListener('keydown', enableAudioOnFirstInteraction)
-  document.removeEventListener('touchstart', enableAudioOnFirstInteraction)
-}
-
-// Add listeners for first user interaction
-document.addEventListener('click', enableAudioOnFirstInteraction)
-document.addEventListener('keydown', enableAudioOnFirstInteraction)
-document.addEventListener('touchstart', enableAudioOnFirstInteraction)
+// Add listeners for first user interaction (including touch events for mobile)
+document.addEventListener('click', enableAudioOnFirstInteraction, { passive: true })
+document.addEventListener('keydown', enableAudioOnFirstInteraction, { passive: true })
+document.addEventListener('touchstart', enableAudioOnFirstInteraction, { passive: true })
+document.addEventListener('touchend', enableAudioOnFirstInteraction, { passive: true })
 
 // Handle page visibility changes (pause/resume game)
 document.addEventListener('visibilitychange', () => {
