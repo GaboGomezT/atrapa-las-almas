@@ -533,6 +533,14 @@ export class UIManager {
   showGameUI() {
     this.hideGameOverScreen()
     this.isGameActive = true
+    
+    // Re-enable touch controls when starting a new game
+    if (this.touchControlManager) {
+      this.touchControlManager.enableControls()
+    }
+    if (this.inputManager) {
+      this.inputManager.enableTouchControls()
+    }
   }
 
   /**
