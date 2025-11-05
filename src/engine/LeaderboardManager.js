@@ -51,9 +51,13 @@ export class LeaderboardManager {
     try {
       console.log(`Submitting score for ${playerName}: ${score}`)
       
+      // Show loading modal
+      this.uiManager.showLeaderboardLoadingModal('Obteniendo el ranking...')
+      
       // Check network availability first (Requirement 5.1)
       if (!this.apiService.isNetworkAvailable()) {
         console.warn('Network not available, showing offline leaderboard')
+        this.uiManager.hideLeaderboardLoadingModal()
         this.showOfflineLeaderboard(playerName, score)
         return
       }
@@ -71,6 +75,7 @@ export class LeaderboardManager {
         
         // Handle fetch error with retry option (Requirement 5.2)
         if (this.shouldShowRetryForError(error)) {
+          this.uiManager.hideLeaderboardLoadingModal()
           this.showNetworkErrorWithRetry(error, () => {
             this.submitScore(playerName, score)
           }, () => {
@@ -110,6 +115,7 @@ export class LeaderboardManager {
           
           // Handle submission error with retry option (Requirement 5.3)
           if (this.shouldShowRetryForError(error)) {
+            this.uiManager.hideLeaderboardLoadingModal()
             this.showApiErrorWithRetry(error, () => {
               this.submitScore(playerName, score)
             }, () => {
@@ -141,6 +147,9 @@ export class LeaderboardManager {
 
       console.log('Leaderboard data prepared:', leaderboardData)
       
+      // Hide loading modal
+      this.uiManager.hideLeaderboardLoadingModal()
+      
       // Transition GameEngine to leaderboard display state
       if (this.gameEngine) {
         this.gameEngine.showLeaderboard()
@@ -153,6 +162,9 @@ export class LeaderboardManager {
       
     } catch (error) {
       console.error('Error in submitScore:', error)
+      
+      // Hide loading modal on error
+      this.uiManager.hideLeaderboardLoadingModal()
       
       // Handle critical errors (Requirement 5.2, 5.3)
       this.handleCriticalError(error, playerName, score)
@@ -405,6 +417,9 @@ export class LeaderboardManager {
   showOfflineLeaderboard(playerName, score) {
     console.log('Showing offline leaderboard for:', playerName, score)
     
+    // Hide loading modal if still visible
+    this.uiManager.hideLeaderboardLoadingModal()
+    
     const offlineData = {
       playerName,
       playerScore: score,
@@ -427,6 +442,9 @@ export class LeaderboardManager {
    */
   showLeaderboardWithoutSubmission(playerName, score, topScores) {
     console.log('Showing leaderboard without submission for:', playerName, score)
+    
+    // Hide loading modal if still visible
+    this.uiManager.hideLeaderboardLoadingModal()
     
     const leaderboardData = {
       playerName,

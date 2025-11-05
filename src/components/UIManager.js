@@ -27,6 +27,8 @@ export class UIManager {
     this.playerResultMessage = null
     this.leaderboardList = null
     this.closeLeaderboardButton = null
+    this.leaderboardLoadingModal = null
+    this.leaderboardLoadingText = null
     
     // Error modal elements
     this.networkErrorModal = null
@@ -98,9 +100,15 @@ export class UIManager {
       this.playerResultMessage = document.getElementById('player-result-message')
       this.leaderboardList = document.getElementById('leaderboard-list')
       this.closeLeaderboardButton = document.getElementById('close-leaderboard-button')
+      this.leaderboardLoadingModal = document.getElementById('leaderboard-loading-modal')
+      this.leaderboardLoadingText = document.getElementById('leaderboard-loading-text')
 
       if (!this.leaderboardModal || !this.playerResultMessage || !this.leaderboardList || !this.closeLeaderboardButton) {
         throw new Error('Leaderboard modal elements not found')
+      }
+
+      if (!this.leaderboardLoadingModal || !this.leaderboardLoadingText) {
+        throw new Error('Leaderboard loading modal elements not found')
       }
 
       // Get error modal elements
@@ -889,6 +897,55 @@ export class UIManager {
    */
   setLeaderboardCloseCallback(callback) {
     this.onLeaderboardCloseCallback = callback
+  }
+
+  /**
+   * Show leaderboard loading modal
+   * @param {string} message - Optional loading message
+   */
+  showLeaderboardLoadingModal(message = 'Obteniendo el ranking...') {
+    if (!this.leaderboardLoadingModal || !this.leaderboardLoadingText) {
+      console.error('Leaderboard loading modal elements not found')
+      return
+    }
+
+    // Disable touch controls to prevent interference with modal
+    if (this.touchControlManager) {
+      this.touchControlManager.disableControls()
+    }
+    if (this.inputManager) {
+      this.inputManager.disableTouchControls()
+    }
+
+    // Update loading message
+    this.leaderboardLoadingText.textContent = message
+
+    // Show the modal with fade-in effect
+    this.leaderboardLoadingModal.classList.remove('hidden')
+    this.leaderboardLoadingModal.style.opacity = '0'
+    this.leaderboardLoadingModal.style.transition = 'opacity 0.3s ease'
+
+    setTimeout(() => {
+      this.leaderboardLoadingModal.style.opacity = '1'
+    }, 10)
+
+    console.log('Leaderboard loading modal shown')
+  }
+
+  /**
+   * Hide leaderboard loading modal
+   */
+  hideLeaderboardLoadingModal() {
+    if (this.leaderboardLoadingModal) {
+      // Fade out effect
+      this.leaderboardLoadingModal.style.opacity = '0'
+      this.leaderboardLoadingModal.style.transition = 'opacity 0.3s ease'
+
+      setTimeout(() => {
+        this.leaderboardLoadingModal.classList.add('hidden')
+        this.leaderboardLoadingModal.style.opacity = '1'
+      }, 300)
+    }
   }
 
   /**
